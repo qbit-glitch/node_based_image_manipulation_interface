@@ -20,6 +20,10 @@ using namespace std;
 using namespace cv;
 
 // Function to open a file dialog for opening files
+/*  Scope of Improvement. you can add a file dialog for linux systems using zenity.
+    You can also add a file dialog for macos and windows using the appropriate libraries.
+    First do the implementation for linux and then for macos and windows.
+*/
 string openFileDialog() {
 #ifdef _WIN32
     char filename[MAX_PATH];
@@ -49,6 +53,10 @@ string openFileDialog() {
 }
 
 // Function to open a file dialog for saving files
+/*  Scope of Improvement. you can add a file dialog for linux systems using zenity.
+    You can also add a file dialog for macos and windows using the appropriate libraries.
+    First do the implementation for linux and then for macos and windows.
+*/
 string saveFileDialog() {
 #ifdef _WIN32
     char filename[MAX_PATH];
@@ -93,7 +101,7 @@ private:
         float contrast = 100.0f;      // Range 0 to 300 (100 is normal)
         float blurSize = 0.0f;        // Range 0 to 15
         float rotationAngle = 0.0f;   // Range 0 to 360
-        float resizeRatio = 100.0f;   // Range 10 to 300 (percentage)
+        // float resizeRatio = 100.0f;   // Range 10 to 300 (percentage) // Bug in this part of the code. Rectify it.
     } params;
     
     // OpenGL texture for displaying the image
@@ -177,15 +185,15 @@ public:
     void applyTransformations(Mat& image) {
         if (image.empty()) return;  // Skip if image is empty
         
-        // Apply resize if not 100%
-        if (params.resizeRatio != 100.0f) {
-            double ratio = params.resizeRatio / 100.0;
-            int newWidth = static_cast<int>(originalImage.cols * ratio);
-            int newHeight = static_cast<int>(originalImage.rows * ratio);
-            if (newWidth > 0 && newHeight > 0) {  // Ensure valid dimensions
-                resize(image, image, Size(newWidth, newHeight), 0, 0, INTER_LINEAR);
-            }
-        }
+        // // Apply resize if not 100%
+        // if (params.resizeRatio != 100.0f) {
+        //     double ratio = params.resizeRatio / 100.0;
+        //     int newWidth = static_cast<int>(originalImage.cols * ratio);
+        //     int newHeight = static_cast<int>(originalImage.rows * ratio);
+        //     if (newWidth > 0 && newHeight > 0) {  // Ensure valid dimensions
+        //         resize(image, image, Size(newWidth, newHeight), 0, 0, INTER_LINEAR);
+        //     }
+        // }
         
         // Apply rotation if not 0
         if (params.rotationAngle != 0.0f) {
@@ -262,7 +270,7 @@ public:
         params.contrast = 100.0f;
         params.blurSize = 0.0f;
         params.rotationAngle = 0.0f;
-        params.resizeRatio = 100.0f;
+        // params.resizeRatio = 100.0f;
         
         // Exit crop mode if active
         cropMode = false;
@@ -603,10 +611,10 @@ public:
                 updateImage();
             }
             
-            // Resize slider
-            if (ImGui::SliderFloat("Resize %", &params.resizeRatio, 10.0f, 300.0f, "%.1f")) {
-                updateImage();
-            }
+            // // Resize slider
+            // if (ImGui::SliderFloat("Resize %", &params.resizeRatio, 10.0f, 300.0f, "%.1f")) {
+            //     updateImage();
+            // }
         }
         
         // Image info
