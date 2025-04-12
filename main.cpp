@@ -138,13 +138,18 @@ private:
     Point startPoint;
     Mat tempImage;
     
+    // History stack for undo operations
+    vector<Mat> historyStack;
+    size_t currentHistoryIndex = 0;
+    const size_t maxHistorySize = 20;  // Limit history size to prevent excessive memory usage
+    
     // Parameters for adjustments
     struct {
         float brightness = 0.0f;      // Range -100 to 100
         float contrast = 100.0f;      // Range 0 to 300 (100 is normal)
         float blurSize = 0.0f;        // Range 0 to 15
         float rotationAngle = 0.0f;   // Range 0 to 360
-        // float resizeRatio = 100.0f;   // Range 10 to 300 (percentage) // Bug in this part of the code. Rectify it.
+        float resizeRatio = 100.0f;   // Range 10 to 300 (percentage)
     } params;
     
     // OpenGL texture for displaying the image
@@ -200,6 +205,52 @@ public:
         
         // Create or update OpenGL texture
         updateTexture();
+        
+        // Clear history and add the original image as the first state
+        clearHistory();
+        addToHistory(originalImage);
+    }
+    
+    // Add current image state to history
+    void addToHistory(const Mat& image) {
+        // If we're not at the end of the history, remove all states after the current one
+        if (currentHistoryIndex < historyStack.size()) {
+            historyStack.resize(currentHistoryIndex);
+        }
+        
+        // Add the new state
+        historyStack.push_back(image.clone());
+        currentHistoryIndex = historyStack.size();
+        
+        // Limit history size
+        if (historyStack.size() > maxHistorySize) {
+            historyStack.erase(historyStack.begin());
+            currentHistoryIndex--;
+        }
+    }
+    
+    // Clear history
+    void clearHistory() {
+        historyStack.clear();
+        currentHistoryIndex = 0;
+    }
+    
+    // Undo the last operation
+    bool undo() {
+        if (currentHistoryIndex <= 1) {
+            cout << "Nothing to undo." << endl;
+            return false;
+        }
+        
+        currentHistoryIndex--;
+        workingImage = historyStack[currentHistoryIndex - 1].clone();
+        updateTexture();
+        return true;
+    }
+    
+    // Check if undo is available
+    bool canUndo() const {
+        return currentHistoryIndex > 1;
     }
     
     void updateTexture() {
@@ -228,15 +279,15 @@ public:
     void applyTransformations(Mat& image) {
         if (image.empty()) return;  // Skip if image is empty
         
-        // // Apply resize if not 100%
-        // if (params.resizeRatio != 100.0f) {
-        //     double ratio = params.resizeRatio / 100.0;
-        //     int newWidth = static_cast<int>(originalImage.cols * ratio);
-        //     int newHeight = static_cast<int>(originalImage.rows * ratio);
-        //     if (newWidth > 0 && newHeight > 0) {  // Ensure valid dimensions
-        //         resize(image, image, Size(newWidth, newHeight), 0, 0, INTER_LINEAR);
-        //     }
-        // }
+        // Apply resize if not 100%
+        if (params.resizeRatio != 100.0f) {
+            double ratio = params.resizeRatio / 100.0;
+            int newWidth = static_cast<int>(originalImage.cols * ratio);
+            int newHeight = static_cast<int>(originalImage.rows * ratio);
+            if (newWidth > 0 && newHeight > 0) {  // Ensure valid dimensions
+                resize(image, image, Size(newWidth, newHeight), 0, 0, INTER_LINEAR);
+            }
+        }
         
         // Apply rotation if not 0
         if (params.rotationAngle != 0.0f) {
@@ -269,6 +320,9 @@ public:
         
         // Update the working image
         workingImage = processedImage.clone();
+        
+        // Add to history
+        addToHistory(workingImage);
         
         // Update the texture
         updateTexture();
@@ -318,10 +372,13 @@ public:
         params.contrast = 100.0f;
         params.blurSize = 0.0f;
         params.rotationAngle = 0.0f;
-        // params.resizeRatio = 100.0f;
+        params.resizeRatio = 100.0f;
         
         // Exit crop mode if active
         cropMode = false;
+        
+        // Add to history
+        addToHistory(workingImage);
         
         // Update the texture
         updateTexture();
@@ -332,6 +389,9 @@ public:
             cout << "No image loaded yet." << endl;
             return;
         }
+        
+        // Add current state to history before applying changes
+        addToHistory(workingImage);
         
         Mat gray;
         cvtColor(workingImage, gray, COLOR_BGR2GRAY);
@@ -347,6 +407,9 @@ public:
             return;
         }
         
+        // Add current state to history before applying changes
+        addToHistory(workingImage);
+        
         Mat sharpeningKernel = (Mat_<float>(3, 3) << -1, -1, -1, -1, 9, -1, -1, -1, -1);
         filter2D(workingImage, workingImage, workingImage.depth(), sharpeningKernel);
         
@@ -360,6 +423,9 @@ public:
             return;
         }
         
+        // Add current state to history before applying changes
+        addToHistory(workingImage);
+        
         bitwise_not(workingImage, workingImage);
         
         // Update the texture
@@ -371,6 +437,9 @@ public:
             cout << "No image loaded yet." << endl;
             return;
         }
+        
+        // Add current state to history before applying changes
+        addToHistory(workingImage);
         
         Mat gray, edges;
         cvtColor(workingImage, gray, COLOR_BGR2GRAY);
@@ -386,6 +455,9 @@ public:
             cout << "No image loaded yet." << endl;
             return;
         }
+        
+        // Add current state to history before applying changes
+        addToHistory(workingImage);
         
         // Apply additional blur (beyond what's in trackbar)
         GaussianBlur(workingImage, workingImage, Size(15, 15), 0);
@@ -409,6 +481,9 @@ public:
             cout << "Please enter crop mode first and select a region." << endl;
             return;
         }
+        
+        // Add current state to history before applying changes
+        addToHistory(workingImage);
         
         // Normalize the rectangle (ensure width and height are positive)
         cropRect = normalizeRect(cropRect);
@@ -477,6 +552,10 @@ public:
             }
             
             if (ImGui::BeginMenu("Edit")) {
+                if (ImGui::MenuItem("Undo", "Ctrl+Z", false, canUndo())) {
+                    undo();
+                }
+                ImGui::Separator();
                 if (ImGui::MenuItem("Reset", "Ctrl+R")) {
                     resetImage();
                 }
@@ -596,42 +675,46 @@ public:
                 resetImage();
             }
             ImGui::SameLine();
+            if (ImGui::Button("Undo", ImVec2(120, 30))) {
+                undo();
+            }
+            
+            ImGui::Spacing();
+            
             if (ImGui::Button("Grayscale", ImVec2(120, 30))) {
                 applyGrayscale();
             }
-            
-            ImGui::Spacing();
-            
+            ImGui::SameLine();
             if (ImGui::Button("Sharpen", ImVec2(120, 30))) {
                 applySharpen();
             }
-            ImGui::SameLine();
+            
+            ImGui::Spacing();
+            
             if (ImGui::Button("Invert", ImVec2(120, 30))) {
                 applyInvert();
             }
-            
-            ImGui::Spacing();
-            
+            ImGui::SameLine();
             if (ImGui::Button("Edge Detection", ImVec2(120, 30))) {
                 applyEdgeDetection();
             }
-            ImGui::SameLine();
+            
+            ImGui::Spacing();
+            
             if (ImGui::Button("Blur", ImVec2(120, 30))) {
                 applyBlur();
             }
-            
-            ImGui::Spacing();
-            
+            ImGui::SameLine();
             if (ImGui::Button("Crop Mode", ImVec2(120, 30))) {
                 enterCropMode();
             }
-            ImGui::SameLine();
-            if (ImGui::Button("Apply Crop", ImVec2(120, 30))) {
-                applyCrop();
-            }
             
             ImGui::Spacing();
             
+            if (ImGui::Button("Apply Crop", ImVec2(120, 30))) {
+                applyCrop();
+            }
+            ImGui::SameLine();
             if (ImGui::Button("Cancel Crop", ImVec2(120, 30))) {
                 cancelCrop();
             }
@@ -659,10 +742,10 @@ public:
                 updateImage();
             }
             
-            // // Resize slider
-            // if (ImGui::SliderFloat("Resize %", &params.resizeRatio, 10.0f, 300.0f, "%.1f")) {
-            //     updateImage();
-            // }
+            // Resize slider
+            if (ImGui::SliderFloat("Resize %", &params.resizeRatio, 10.0f, 300.0f, "%.1f")) {
+                updateImage();
+            }
         }
         
         // Image info
