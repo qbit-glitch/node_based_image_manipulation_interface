@@ -20,10 +20,6 @@ using namespace std;
 using namespace cv;
 
 // Function to open a file dialog for opening files
-/*  Scope of Improvement. you can add a file dialog for linux systems using zenity.
-    You can also add a file dialog for macos and windows using the appropriate libraries.
-    First do the implementation for linux and then for macos and windows.
-*/
 string openFileDialog() {
 #ifdef _WIN32
     char filename[MAX_PATH];
@@ -44,19 +40,35 @@ string openFileDialog() {
     }
     return "";
 #else
-    // For non-Windows systems, use a simple terminal prompt
-    string path;
-    cout << "Enter the path to the image file: ";
-    getline(cin, path);
-    return path;
+    // For Linux systems, use zenity for a graphical file dialog
+    string command = "zenity --file-selection --title=\"Select an Image\" --file-filter=\"Image Files | *.jpg *.jpeg *.png *.bmp *.tif *.tiff\" --file-filter=\"All Files | *.*\"";
+    
+    FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe) {
+        cerr << "Failed to open file dialog. Falling back to terminal input." << endl;
+        string path;
+        cout << "Enter the path to the image file: ";
+        getline(cin, path);
+        return path;
+    }
+    
+    char buffer[1024];
+    string result = "";
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+        result += buffer;
+    }
+    
+    // Remove trailing newline if present
+    if (!result.empty() && result[result.length() - 1] == '\n') {
+        result.erase(result.length() - 1);
+    }
+    
+    pclose(pipe);
+    return result;
 #endif
 }
 
 // Function to open a file dialog for saving files
-/*  Scope of Improvement. you can add a file dialog for linux systems using zenity.
-    You can also add a file dialog for macos and windows using the appropriate libraries.
-    First do the implementation for linux and then for macos and windows.
-*/
 string saveFileDialog() {
 #ifdef _WIN32
     char filename[MAX_PATH];
@@ -77,11 +89,42 @@ string saveFileDialog() {
     }
     return "";
 #else
-    // For non-Windows systems, use a simple terminal prompt
-    string path;
-    cout << "Enter the path to save the image file: ";
-    getline(cin, path);
-    return path;
+    // For Linux systems, use zenity for a graphical file dialog
+    string command = "zenity --file-selection --save --title=\"Save Image As\" --file-filter=\"PNG Files | *.png\" --file-filter=\"JPEG Files | *.jpg *.jpeg\" --file-filter=\"BMP Files | *.bmp\" --file-filter=\"All Files | *.*\"";
+    
+    FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe) {
+        cerr << "Failed to open file dialog. Falling back to terminal input." << endl;
+        string path;
+        cout << "Enter the path to save the image file: ";
+        getline(cin, path);
+        
+        // Ensure the path has a valid extension
+        if (path.find('.') == string::npos) {
+            path += ".png"; // Default to PNG if no extension is provided
+        }
+        return path;
+    }
+    
+    char buffer[1024];
+    string result = "";
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+        result += buffer;
+    }
+    
+    // Remove trailing newline if present
+    if (!result.empty() && result[result.length() - 1] == '\n') {
+        result.erase(result.length() - 1);
+    }
+    
+    pclose(pipe);
+    
+    // Ensure the path has a valid extension
+    if (!result.empty() && result.find('.') == string::npos) {
+        result += ".png"; // Default to PNG if no extension is provided
+    }
+    
+    return result;
 #endif
 }
 
@@ -247,6 +290,11 @@ public:
         
         string path = ::saveFileDialog();
         if (!path.empty()) {
+            // Ensure the path has a valid extension
+            if (path.find('.') == string::npos) {
+                path += ".png"; // Default to PNG if no extension is provided
+            }
+            
             bool success = imwrite(path, workingImage);
             if (success) {
                 cout << "Image saved successfully to " << path << endl;
