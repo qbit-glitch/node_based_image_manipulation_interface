@@ -8,7 +8,15 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/main.cpp" "CMakeFiles/MyProject.dir/main.cpp.o" "gcc" "CMakeFiles/MyProject.dir/main.cpp.o.d"
+  "/home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/backends/imgui_impl_glfw.cpp" "CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.o" "gcc" "CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.o.d"
+  "/home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/backends/imgui_impl_opengl3.cpp" "CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o" "gcc" "CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o.d"
+  "/home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui.cpp" "CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.o" "gcc" "CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.o.d"
+  "/home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_demo.cpp" "CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.o" "gcc" "CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.o.d"
+  "/home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_draw.cpp" "CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.o" "gcc" "CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.o.d"
+  "/home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_tables.cpp" "CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.o" "gcc" "CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.o.d"
+  "/home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_widgets.cpp" "CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.o" "gcc" "CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.o.d"
+  "/home/quant/testing_codes_github/node_based_image_manipulation_interface/main.cpp" "CMakeFiles/MyProject.dir/main.cpp.o" "gcc" "CMakeFiles/MyProject.dir/main.cpp.o.d"
+  "" "MyProject" "gcc" "CMakeFiles/MyProject.dir/link.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

@@ -4,9 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -isystem /opt/homebrew/Cellar/opencv/4.11.0_1/include/opencv4
+CXX_INCLUDES = -I/home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui -I/home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/backends -I/home/quant/testing_codes_github/node_based_image_manipulation_interface -isystem /usr/include/opencv4 -isystem /home/linuxbrew/.linuxbrew/include
 
-CXX_FLAGSarm64 = -std=gnu++11 -arch arm64
-
-CXX_FLAGS = -std=gnu++11 -arch arm64
+CXX_FLAGS = 
 

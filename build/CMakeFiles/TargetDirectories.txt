@@ -1,3 +1,3 @@
-/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/build/CMakeFiles/MyProject.dir
-/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/build/CMakeFiles/edit_cache.dir
-/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/build/CMakeFiles/rebuild_cache.dir
+/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles/MyProject.dir
+/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles/edit_cache.dir
+/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles/rebuild_cache.dir

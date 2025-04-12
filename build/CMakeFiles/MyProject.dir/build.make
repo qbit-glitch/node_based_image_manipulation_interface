@@ -44,19 +44,19 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /opt/homebrew/bin/cmake
+CMAKE_COMMAND = /home/linuxbrew/.linuxbrew/bin/cmake
 
 # The command to remove a file.
-RM = /opt/homebrew/bin/cmake -E rm -f
+RM = /home/linuxbrew/.linuxbrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = "/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface"
+CMAKE_SOURCE_DIR = /home/quant/testing_codes_github/node_based_image_manipulation_interface
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = "/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/build"
+CMAKE_BINARY_DIR = /home/quant/testing_codes_github/node_based_image_manipulation_interface/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/MyProject.dir/depend.make
@@ -73,86 +73,202 @@ CMakeFiles/MyProject.dir/codegen:
 .PHONY : CMakeFiles/MyProject.dir/codegen
 
 CMakeFiles/MyProject.dir/main.cpp.o: CMakeFiles/MyProject.dir/flags.make
-CMakeFiles/MyProject.dir/main.cpp.o: /Users/qbit-glitch/Desktop/Game_Developments/ImGUI\ Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/main.cpp
+CMakeFiles/MyProject.dir/main.cpp.o: /home/quant/testing_codes_github/node_based_image_manipulation_interface/main.cpp
 CMakeFiles/MyProject.dir/main.cpp.o: CMakeFiles/MyProject.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/MyProject.dir/main.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/MyProject.dir/main.cpp.o -MF CMakeFiles/MyProject.dir/main.cpp.o.d -o CMakeFiles/MyProject.dir/main.cpp.o -c "/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/main.cpp"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/MyProject.dir/main.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/MyProject.dir/main.cpp.o -MF CMakeFiles/MyProject.dir/main.cpp.o.d -o CMakeFiles/MyProject.dir/main.cpp.o -c /home/quant/testing_codes_github/node_based_image_manipulation_interface/main.cpp
 
 CMakeFiles/MyProject.dir/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/MyProject.dir/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/main.cpp" > CMakeFiles/MyProject.dir/main.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/quant/testing_codes_github/node_based_image_manipulation_interface/main.cpp > CMakeFiles/MyProject.dir/main.cpp.i
 
 CMakeFiles/MyProject.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/MyProject.dir/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/main.cpp" -o CMakeFiles/MyProject.dir/main.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/quant/testing_codes_github/node_based_image_manipulation_interface/main.cpp -o CMakeFiles/MyProject.dir/main.cpp.s
+
+CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.o: CMakeFiles/MyProject.dir/flags.make
+CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.o: /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui.cpp
+CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.o: CMakeFiles/MyProject.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.o -MF CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.o.d -o CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.o -c /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui.cpp
+
+CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui.cpp > CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.i
+
+CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui.cpp -o CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.s
+
+CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.o: CMakeFiles/MyProject.dir/flags.make
+CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.o: /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_demo.cpp
+CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.o: CMakeFiles/MyProject.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.o -MF CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.o.d -o CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.o -c /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_demo.cpp
+
+CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_demo.cpp > CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.i
+
+CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_demo.cpp -o CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.s
+
+CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.o: CMakeFiles/MyProject.dir/flags.make
+CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.o: /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_draw.cpp
+CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.o: CMakeFiles/MyProject.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.o -MF CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.o.d -o CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.o -c /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_draw.cpp
+
+CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_draw.cpp > CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.i
+
+CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_draw.cpp -o CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.s
+
+CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.o: CMakeFiles/MyProject.dir/flags.make
+CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.o: /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_tables.cpp
+CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.o: CMakeFiles/MyProject.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.o -MF CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.o.d -o CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.o -c /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_tables.cpp
+
+CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_tables.cpp > CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.i
+
+CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_tables.cpp -o CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.s
+
+CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.o: CMakeFiles/MyProject.dir/flags.make
+CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.o: /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_widgets.cpp
+CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.o: CMakeFiles/MyProject.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.o -MF CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.o.d -o CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.o -c /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_widgets.cpp
+
+CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_widgets.cpp > CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.i
+
+CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/imgui_widgets.cpp -o CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.s
+
+CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.o: CMakeFiles/MyProject.dir/flags.make
+CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.o: /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/backends/imgui_impl_glfw.cpp
+CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.o: CMakeFiles/MyProject.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.o -MF CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.o.d -o CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.o -c /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/backends/imgui_impl_glfw.cpp
+
+CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/backends/imgui_impl_glfw.cpp > CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.i
+
+CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/backends/imgui_impl_glfw.cpp -o CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.s
+
+CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o: CMakeFiles/MyProject.dir/flags.make
+CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o: /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/backends/imgui_impl_opengl3.cpp
+CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o: CMakeFiles/MyProject.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o -MF CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o.d -o CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o -c /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/backends/imgui_impl_opengl3.cpp
+
+CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/backends/imgui_impl_opengl3.cpp > CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.i
+
+CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/quant/testing_codes_github/node_based_image_manipulation_interface/external/imgui/backends/imgui_impl_opengl3.cpp -o CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.s
 
 # Object files for target MyProject
 MyProject_OBJECTS = \
-"CMakeFiles/MyProject.dir/main.cpp.o"
+"CMakeFiles/MyProject.dir/main.cpp.o" \
+"CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.o" \
+"CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.o" \
+"CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.o" \
+"CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.o" \
+"CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.o" \
+"CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.o" \
+"CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o"
 
 # External object files for target MyProject
 MyProject_EXTERNAL_OBJECTS =
 
 MyProject: CMakeFiles/MyProject.dir/main.cpp.o
+MyProject: CMakeFiles/MyProject.dir/external/imgui/imgui.cpp.o
+MyProject: CMakeFiles/MyProject.dir/external/imgui/imgui_demo.cpp.o
+MyProject: CMakeFiles/MyProject.dir/external/imgui/imgui_draw.cpp.o
+MyProject: CMakeFiles/MyProject.dir/external/imgui/imgui_tables.cpp.o
+MyProject: CMakeFiles/MyProject.dir/external/imgui/imgui_widgets.cpp.o
+MyProject: CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_glfw.cpp.o
+MyProject: CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o
 MyProject: CMakeFiles/MyProject.dir/build.make
-MyProject: /opt/homebrew/lib/libopencv_gapi.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_stitching.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_alphamat.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_aruco.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_bgsegm.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_bioinspired.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_ccalib.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_dnn_objdetect.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_dnn_superres.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_dpm.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_face.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_freetype.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_fuzzy.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_hfs.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_img_hash.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_intensity_transform.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_line_descriptor.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_mcc.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_quality.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_rapid.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_reg.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_rgbd.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_saliency.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_sfm.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_signal.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_stereo.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_structured_light.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_superres.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_surface_matching.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_tracking.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_videostab.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_viz.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_wechat_qrcode.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_xfeatures2d.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_xobjdetect.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_xphoto.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_shape.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_highgui.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_datasets.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_plot.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_text.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_ml.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_phase_unwrapping.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_optflow.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_ximgproc.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_video.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_videoio.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_imgcodecs.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_objdetect.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_calib3d.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_dnn.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_features2d.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_flann.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_photo.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_imgproc.4.11.0.dylib
-MyProject: /opt/homebrew/lib/libopencv_core.4.11.0.dylib
+MyProject: CMakeFiles/MyProject.dir/compiler_depend.ts
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_stitching.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_alphamat.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_aruco.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_barcode.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_bgsegm.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_bioinspired.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_ccalib.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_cvv.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_dnn_objdetect.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_dnn_superres.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_dpm.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_face.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_freetype.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_fuzzy.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_hdf.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_hfs.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_img_hash.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_intensity_transform.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_line_descriptor.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_mcc.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_quality.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_rapid.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_reg.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_rgbd.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_saliency.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_shape.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_stereo.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_structured_light.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_superres.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_surface_matching.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_tracking.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_videostab.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_viz.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_wechat_qrcode.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_xobjdetect.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_xphoto.so.4.6.0
+MyProject: /home/linuxbrew/.linuxbrew/lib/libglfw.so.3.4
+MyProject: /usr/lib/aarch64-linux-gnu/libOpenGL.so
+MyProject: /usr/lib/aarch64-linux-gnu/libGLX.so
+MyProject: /home/linuxbrew/.linuxbrew/lib/libGLU.so
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_highgui.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_datasets.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_plot.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_text.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_ml.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_phase_unwrapping.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_optflow.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_ximgproc.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_video.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_videoio.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_imgcodecs.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_objdetect.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_calib3d.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_dnn.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_features2d.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_flann.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_photo.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_imgproc.so.4.6.0
+MyProject: /usr/lib/aarch64-linux-gnu/libopencv_core.so.4.6.0
 MyProject: CMakeFiles/MyProject.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir="/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable MyProject"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking CXX executable MyProject"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/MyProject.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -164,6 +280,6 @@ CMakeFiles/MyProject.dir/clean:
 .PHONY : CMakeFiles/MyProject.dir/clean
 
 CMakeFiles/MyProject.dir/depend:
-	cd "/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/build" && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" "/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface" "/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface" "/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/build" "/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/build" "/Users/qbit-glitch/Desktop/Game_Developments/ImGUI Projects/image_opencv/sample_demo/node_based_image_manipulation_interface/build/CMakeFiles/MyProject.dir/DependInfo.cmake" "--color=$(COLOR)"
+	cd /home/quant/testing_codes_github/node_based_image_manipulation_interface/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/quant/testing_codes_github/node_based_image_manipulation_interface /home/quant/testing_codes_github/node_based_image_manipulation_interface /home/quant/testing_codes_github/node_based_image_manipulation_interface/build /home/quant/testing_codes_github/node_based_image_manipulation_interface/build /home/quant/testing_codes_github/node_based_image_manipulation_interface/build/CMakeFiles/MyProject.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/MyProject.dir/depend
 
