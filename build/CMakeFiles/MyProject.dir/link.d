@@ -163,6 +163,7 @@ MyProject: \
   /lib/aarch64-linux-gnu/libdfalt.so.0 \
   /lib/aarch64-linux-gnu/libmfhdfalt.so.0 \
   /lib/aarch64-linux-gnu/libX11.so.6 \
+  /lib/aarch64-linux-gnu/libatlas.so.3 \
   /lib/aarch64-linux-gnu/libgfortran.so.5 \
   /lib/aarch64-linux-gnu/libnghttp2.so.14 \
   /lib/aarch64-linux-gnu/libidn2.so.0 \
@@ -549,6 +550,8 @@ CMakeFiles/MyProject.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o:
 /lib/aarch64-linux-gnu/libmfhdfalt.so.0:
 
 /lib/aarch64-linux-gnu/libX11.so.6:
+
+/lib/aarch64-linux-gnu/libatlas.so.3:
 
 /lib/aarch64-linux-gnu/libgfortran.so.5:
 
