@@ -170,6 +170,10 @@ private:
     bool isDragging = false;
     ImVec2 dragStart;
     ImVec2 dragEnd;
+    
+    // UI scaling factors
+    float uiScale = 1.5f;  // Increase UI scale for larger components
+    float fontSize = 25.0f; // Increase font size for better readability
 
 public:
     ImageEditorGUI(const string& path = "") {
@@ -538,6 +542,9 @@ public:
     
     // Render the ImGui interface
     void renderUI() {
+        // Set font size for better readability
+        ImGui::GetIO().FontGlobalScale = uiScale;
+        
         // Main window - make it fixed (non-draggable)
         ImGui::Begin("Image Editor", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
         
@@ -655,69 +662,76 @@ public:
         
         // Image operations
         if (ImGui::CollapsingHeader("Image Operations", ImGuiTreeNodeFlags_DefaultOpen)) {
-            if (ImGui::Button("Open Image", ImVec2(120, 30))) {
+            // Increase button sizes
+            float buttonWidth = 150.0f * uiScale;
+            float buttonHeight = 40.0f * uiScale;
+            
+            if (ImGui::Button("Open Image", ImVec2(buttonWidth, buttonHeight))) {
                 openImageDialog();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Save Image", ImVec2(120, 30))) {
+            if (ImGui::Button("Save Image", ImVec2(buttonWidth, buttonHeight))) {
                 saveImageDialog();
             }
             
             ImGui::Spacing();
             
-            if (ImGui::Button("Reset", ImVec2(120, 30))) {
+            if (ImGui::Button("Reset", ImVec2(buttonWidth, buttonHeight))) {
                 resetImage();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Undo", ImVec2(120, 30))) {
+            if (ImGui::Button("Undo", ImVec2(buttonWidth, buttonHeight))) {
                 undo();
             }
             
             ImGui::Spacing();
             
-            if (ImGui::Button("Grayscale", ImVec2(120, 30))) {
+            if (ImGui::Button("Grayscale", ImVec2(buttonWidth, buttonHeight))) {
                 applyGrayscale();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Sharpen", ImVec2(120, 30))) {
+            if (ImGui::Button("Sharpen", ImVec2(buttonWidth, buttonHeight))) {
                 applySharpen();
             }
             
             ImGui::Spacing();
             
-            if (ImGui::Button("Invert", ImVec2(120, 30))) {
+            if (ImGui::Button("Invert", ImVec2(buttonWidth, buttonHeight))) {
                 applyInvert();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Edge Detection", ImVec2(120, 30))) {
+            if (ImGui::Button("Edge Detection", ImVec2(buttonWidth, buttonHeight))) {
                 applyEdgeDetection();
             }
             
             ImGui::Spacing();
             
-            if (ImGui::Button("Blur", ImVec2(120, 30))) {
+            if (ImGui::Button("Blur", ImVec2(buttonWidth, buttonHeight))) {
                 applyBlur();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Crop Mode", ImVec2(120, 30))) {
+            if (ImGui::Button("Crop Mode", ImVec2(buttonWidth, buttonHeight))) {
                 enterCropMode();
             }
             
             ImGui::Spacing();
             
-            if (ImGui::Button("Apply Crop", ImVec2(120, 30))) {
+            if (ImGui::Button("Apply Crop", ImVec2(buttonWidth, buttonHeight))) {
                 applyCrop();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Cancel Crop", ImVec2(120, 30))) {
+            if (ImGui::Button("Cancel Crop", ImVec2(buttonWidth, buttonHeight))) {
                 cancelCrop();
             }
         }
         
         // Crop controls (only visible in crop mode)
         if (cropMode && ImGui::CollapsingHeader("Crop Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
+            // Increase slider height
+            float sliderHeight = 30.0f * uiScale;
+            
             // X position slider
-            if (ImGui::SliderInt("X Position", &cropRect.x, 0, imageWidth - 1)) {
+            if (ImGui::SliderInt("X Position", &cropRect.x, 0, imageWidth - 1, nullptr, ImGuiSliderFlags_None)) {
                 // Ensure width is valid
                 if (cropRect.x + cropRect.width > imageWidth) {
                     cropRect.width = imageWidth - cropRect.x;
@@ -725,7 +739,7 @@ public:
             }
             
             // Y position slider
-            if (ImGui::SliderInt("Y Position", &cropRect.y, 0, imageHeight - 1)) {
+            if (ImGui::SliderInt("Y Position", &cropRect.y, 0, imageHeight - 1, nullptr, ImGuiSliderFlags_None)) {
                 // Ensure height is valid
                 if (cropRect.y + cropRect.height > imageHeight) {
                     cropRect.height = imageHeight - cropRect.y;
@@ -733,12 +747,12 @@ public:
             }
             
             // Width slider
-            if (ImGui::SliderInt("Width", &cropRect.width, 1, imageWidth - cropRect.x)) {
+            if (ImGui::SliderInt("Width", &cropRect.width, 1, imageWidth - cropRect.x, nullptr, ImGuiSliderFlags_None)) {
                 // No additional validation needed
             }
             
             // Height slider
-            if (ImGui::SliderInt("Height", &cropRect.height, 1, imageHeight - cropRect.y)) {
+            if (ImGui::SliderInt("Height", &cropRect.height, 1, imageHeight - cropRect.y, nullptr, ImGuiSliderFlags_None)) {
                 // No additional validation needed
             }
             
@@ -755,21 +769,21 @@ public:
             // Preset crop options
             ImGui::Text("Preset Crops:");
             ImGui::SameLine();
-            if (ImGui::Button("Center 50%")) {
+            if (ImGui::Button("Center 50%", ImVec2(120.0f * uiScale, 30.0f * uiScale))) {
                 cropRect.x = imageWidth / 4;
                 cropRect.y = imageHeight / 4;
                 cropRect.width = imageWidth / 2;
                 cropRect.height = imageHeight / 2;
             }
             ImGui::SameLine();
-            if (ImGui::Button("Center 75%")) {
+            if (ImGui::Button("Center 75%", ImVec2(120.0f * uiScale, 30.0f * uiScale))) {
                 cropRect.x = imageWidth / 8;
                 cropRect.y = imageHeight / 8;
                 cropRect.width = imageWidth * 3 / 4;
                 cropRect.height = imageHeight * 3 / 4;
             }
             ImGui::SameLine();
-            if (ImGui::Button("Full Image")) {
+            if (ImGui::Button("Full Image", ImVec2(120.0f * uiScale, 30.0f * uiScale))) {
                 cropRect.x = 0;
                 cropRect.y = 0;
                 cropRect.width = imageWidth;
@@ -779,23 +793,26 @@ public:
         
         // Adjustments
         if (ImGui::CollapsingHeader("Adjustments", ImGuiTreeNodeFlags_DefaultOpen)) {
+            // Increase slider height
+            float sliderHeight = 30.0f * uiScale;
+            
             // Brightness slider
-            if (ImGui::SliderFloat("Brightness", &params.brightness, -100.0f, 100.0f, "%.1f")) {
+            if (ImGui::SliderFloat("Brightness", &params.brightness, -100.0f, 100.0f, "%.1f", ImGuiSliderFlags_None)) {
                 updateImage();
             }
             
             // Contrast slider
-            if (ImGui::SliderFloat("Contrast", &params.contrast, 1.0f, 300.0f, "%.1f")) {
+            if (ImGui::SliderFloat("Contrast", &params.contrast, 1.0f, 300.0f, "%.1f", ImGuiSliderFlags_None)) {
                 updateImage();
             }
             
             // Blur size slider
-            if (ImGui::SliderFloat("Blur Size", &params.blurSize, 0.0f, 15.0f, "%.1f")) {
+            if (ImGui::SliderFloat("Blur Size", &params.blurSize, 0.0f, 15.0f, "%.1f", ImGuiSliderFlags_None)) {
                 updateImage();
             }
             
             // Rotation slider
-            if (ImGui::SliderFloat("Rotation", &params.rotationAngle, 0.0f, 360.0f, "%.1f")) {
+            if (ImGui::SliderFloat("Rotation", &params.rotationAngle, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None)) {
                 updateImage();
             }
             
@@ -891,6 +908,12 @@ public:
         // Setup style
         ImGui::StyleColorsDark();
         
+        // Increase font size
+        ImFontConfig fontConfig;
+        fontConfig.OversampleH = 3;
+        fontConfig.OversampleV = 3;
+        io.Fonts->AddFontDefault(&fontConfig);
+        
         // Setup Platform/Renderer backends
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init("#version 130");
@@ -904,6 +927,16 @@ public:
         while (!glfwWindowShouldClose(window)) {
             // Poll and handle events
             glfwPollEvents();
+            
+            // Get current window size
+            int width, height;
+            glfwGetWindowSize(window, &width, &height);
+            
+            // Update window dimensions if changed
+            if (width != windowWidth || height != windowHeight) {
+                windowWidth = width;
+                windowHeight = height;
+            }
             
             // Start the ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
