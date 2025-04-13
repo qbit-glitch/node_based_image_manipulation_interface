@@ -1,0 +1,3 @@
+lines  : 188 - 196 | 
+         273       |  -> removing the resize feature
+         614 - 617 |
