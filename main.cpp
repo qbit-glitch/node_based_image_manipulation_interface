@@ -46,10 +46,10 @@ string openFileDialog() {
     FILE* pipe = popen(command.c_str(), "r");
     if (!pipe) {
         cerr << "Failed to open file dialog. Falling back to terminal input." << endl;
-    string path;
-    cout << "Enter the path to the image file: ";
-    getline(cin, path);
-    return path;
+        string path;
+        cout << "Enter the path to the image file: ";
+        getline(cin, path);
+        return path;
     }
     
     char buffer[1024];
@@ -95,15 +95,15 @@ string saveFileDialog() {
     FILE* pipe = popen(command.c_str(), "r");
     if (!pipe) {
         cerr << "Failed to open file dialog. Falling back to terminal input." << endl;
-    string path;
-    cout << "Enter the path to save the image file: ";
-    getline(cin, path);
+        string path;
+        cout << "Enter the path to save the image file: ";
+        getline(cin, path);
         
         // Ensure the path has a valid extension
         if (path.find('.') == string::npos) {
             path += ".png"; // Default to PNG if no extension is provided
         }
-    return path;
+        return path;
     }
     
     char buffer[1024];
@@ -149,9 +149,9 @@ private:
         float contrast = 100.0f;      // Range 0 to 300 (100 is normal)
         float blurSize = 0.0f;        // Range 0 to 15
         float rotationAngle = 0.0f;   // Range 0 to 360
-        //float resizeRatio = 100.0f;   // Range 10 to 300 (percentage)
+        float resizeRatio = 100.0f;   // Range 10 to 300 (percentage)
     } params;
-
+    
     // OpenGL texture for displaying the image
     GLuint imageTexture = 0;
     int imageWidth = 0;
@@ -170,10 +170,6 @@ private:
     bool isDragging = false;
     ImVec2 dragStart;
     ImVec2 dragEnd;
-    
-    // UI scaling factors
-    float uiScale = 1.5f;  // Increase UI scale for larger components
-    float fontSize = 25.0f; // Increase font size for better readability
 
 public:
     ImageEditorGUI(const string& path = "") {
@@ -283,15 +279,15 @@ public:
     void applyTransformations(Mat& image) {
         if (image.empty()) return;  // Skip if image is empty
         
-        // // Apply resize if not 100%
-        // if (params.resizeRatio != 100.0f) {
-        //     double ratio = params.resizeRatio / 100.0;
-        //     int newWidth = static_cast<int>(originalImage.cols * ratio);
-        //     int newHeight = static_cast<int>(originalImage.rows * ratio);
-        //     if (newWidth > 0 && newHeight > 0) {  // Ensure valid dimensions
-        //         resize(image, image, Size(newWidth, newHeight), 0, 0, INTER_LINEAR);
-        //     }
-        // }
+        // Apply resize if not 100%
+        if (params.resizeRatio != 100.0f) {
+            double ratio = params.resizeRatio / 100.0;
+            int newWidth = static_cast<int>(originalImage.cols * ratio);
+            int newHeight = static_cast<int>(originalImage.rows * ratio);
+            if (newWidth > 0 && newHeight > 0) {  // Ensure valid dimensions
+                resize(image, image, Size(newWidth, newHeight), 0, 0, INTER_LINEAR);
+            }
+        }
         
         // Apply rotation if not 0
         if (params.rotationAngle != 0.0f) {
@@ -376,7 +372,7 @@ public:
         params.contrast = 100.0f;
         params.blurSize = 0.0f;
         params.rotationAngle = 0.0f;
-        // params.resizeRatio = 100.0f;
+        params.resizeRatio = 100.0f;
         
         // Exit crop mode if active
         cropMode = false;
@@ -477,14 +473,7 @@ public:
         }
         
         cropMode = true;
-        
-        // Initialize crop rectangle to a default size (center 50% of the image)
-        cropRect.x = imageWidth / 4;
-        cropRect.y = imageHeight / 4;
-        cropRect.width = imageWidth / 2;
-        cropRect.height = imageHeight / 2;
-        
-        cout << "Crop mode activated. Use the sliders to define the crop region." << endl;
+        cout << "Crop mode activated. Draw a rectangle on the image." << endl;
     }
     
     void applyCrop() {
@@ -542,11 +531,8 @@ public:
     
     // Render the ImGui interface
     void renderUI() {
-        // Set font size for better readability
-        ImGui::GetIO().FontGlobalScale = uiScale;
-        
-        // Main window - make it fixed (non-draggable)
-        ImGui::Begin("Image Editor", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+        // Main window
+        ImGui::Begin("Image Editor", nullptr, ImGuiWindowFlags_MenuBar);
         
         // Menu bar
         if (ImGui::BeginMenuBar()) {
@@ -624,30 +610,43 @@ public:
             
             // Handle crop mode
             if (cropMode) {
-                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Crop Mode Active - Use the controls below to define crop region");
+                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Crop Mode Active - Draw a rectangle on the image");
                 
-                // Get the image position
+                // Handle mouse input for crop selection
+                ImVec2 mousePos = ImGui::GetMousePos();
                 ImVec2 imagePos = ImGui::GetItemRectMin();
                 
-                // Draw crop rectangle using ImGui drawing functions
-                ImDrawList* draw_list = ImGui::GetWindowDrawList();
-                
-                // Convert crop rectangle from image coordinates to screen coordinates
-                float scaleX = displayWidth / static_cast<float>(imageWidth);
-                float scaleY = displayHeight / static_cast<float>(imageHeight);
-                
-                ImVec2 screenRectMin(
-                    imagePos.x + cropRect.x * scaleX,
-                    imagePos.y + cropRect.y * scaleY
-                );
-                
-                ImVec2 screenRectMax(
-                    imagePos.x + (cropRect.x + cropRect.width) * scaleX,
-                    imagePos.y + (cropRect.y + cropRect.height) * scaleY
-                );
-                
-                // Draw the rectangle
-                draw_list->AddRect(screenRectMin, screenRectMax, IM_COL32(0, 255, 0, 255), 0.0f, 0, 2.0f);
+                // Check if mouse is over the image
+                if (ImGui::IsMouseHoveringRect(imagePos, ImVec2(imagePos.x + displayWidth, imagePos.y + displayHeight))) {
+                    // Convert mouse position to image coordinates
+                    float scaleX = static_cast<float>(imageWidth) / displayWidth;
+                    float scaleY = static_cast<float>(imageHeight) / displayHeight;
+                    
+                    int imgX = static_cast<int>((mousePos.x - imagePos.x) * scaleX);
+                    int imgY = static_cast<int>((mousePos.y - imagePos.y) * scaleY);
+                    
+                    // Handle mouse events
+                    if (ImGui::IsMouseClicked(0)) {
+                        isDragging = true;
+                        dragStart = ImVec2(static_cast<float>(imgX), static_cast<float>(imgY));
+                        dragEnd = dragStart;
+                    } else if (ImGui::IsMouseDragging(0) && isDragging) {
+                        dragEnd = ImVec2(static_cast<float>(imgX), static_cast<float>(imgY));
+                        
+                        // Update crop rectangle
+                        cropRect.x = static_cast<int>(min(dragStart.x, dragEnd.x));
+                        cropRect.y = static_cast<int>(min(dragStart.y, dragEnd.y));
+                        cropRect.width = static_cast<int>(abs(dragEnd.x - dragStart.x));
+                        cropRect.height = static_cast<int>(abs(dragEnd.y - dragStart.y));
+                        
+                        // Create a temporary image with the crop rectangle drawn
+                        tempImage = workingImage.clone();
+                        rectangle(tempImage, cropRect, Scalar(0, 255, 0), 2);
+                        updateTexture();
+                    } else if (ImGui::IsMouseReleased(0) && isDragging) {
+                        isDragging = false;
+                    }
+                }
             }
         } else {
             ImGui::Text("No image loaded. Use File > Open Image to load an image.");
@@ -662,164 +661,91 @@ public:
         
         // Image operations
         if (ImGui::CollapsingHeader("Image Operations", ImGuiTreeNodeFlags_DefaultOpen)) {
-            // Increase button sizes
-            float buttonWidth = 150.0f * uiScale;
-            float buttonHeight = 40.0f * uiScale;
-            
-            if (ImGui::Button("Open Image", ImVec2(buttonWidth, buttonHeight))) {
+            if (ImGui::Button("Open Image", ImVec2(120, 30))) {
                 openImageDialog();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Save Image", ImVec2(buttonWidth, buttonHeight))) {
+            if (ImGui::Button("Save Image", ImVec2(120, 30))) {
                 saveImageDialog();
             }
             
             ImGui::Spacing();
             
-            if (ImGui::Button("Reset", ImVec2(buttonWidth, buttonHeight))) {
+            if (ImGui::Button("Reset", ImVec2(120, 30))) {
                 resetImage();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Undo", ImVec2(buttonWidth, buttonHeight))) {
+            if (ImGui::Button("Undo", ImVec2(120, 30))) {
                 undo();
             }
             
             ImGui::Spacing();
             
-            if (ImGui::Button("Grayscale", ImVec2(buttonWidth, buttonHeight))) {
+            if (ImGui::Button("Grayscale", ImVec2(120, 30))) {
                 applyGrayscale();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Sharpen", ImVec2(buttonWidth, buttonHeight))) {
+            if (ImGui::Button("Sharpen", ImVec2(120, 30))) {
                 applySharpen();
             }
             
             ImGui::Spacing();
             
-            if (ImGui::Button("Invert", ImVec2(buttonWidth, buttonHeight))) {
+            if (ImGui::Button("Invert", ImVec2(120, 30))) {
                 applyInvert();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Edge Detection", ImVec2(buttonWidth, buttonHeight))) {
+            if (ImGui::Button("Edge Detection", ImVec2(120, 30))) {
                 applyEdgeDetection();
             }
             
             ImGui::Spacing();
             
-            if (ImGui::Button("Blur", ImVec2(buttonWidth, buttonHeight))) {
+            if (ImGui::Button("Blur", ImVec2(120, 30))) {
                 applyBlur();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Crop Mode", ImVec2(buttonWidth, buttonHeight))) {
+            if (ImGui::Button("Crop Mode", ImVec2(120, 30))) {
                 enterCropMode();
             }
             
             ImGui::Spacing();
             
-            if (ImGui::Button("Apply Crop", ImVec2(buttonWidth, buttonHeight))) {
+            if (ImGui::Button("Apply Crop", ImVec2(120, 30))) {
                 applyCrop();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Cancel Crop", ImVec2(buttonWidth, buttonHeight))) {
+            if (ImGui::Button("Cancel Crop", ImVec2(120, 30))) {
                 cancelCrop();
-            }
-        }
-        
-        // Crop controls (only visible in crop mode)
-        if (cropMode && ImGui::CollapsingHeader("Crop Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
-            // Increase slider height
-            float sliderHeight = 30.0f * uiScale;
-            
-            // X position slider
-            if (ImGui::SliderInt("X Position", &cropRect.x, 0, imageWidth - 1, nullptr, ImGuiSliderFlags_None)) {
-                // Ensure width is valid
-                if (cropRect.x + cropRect.width > imageWidth) {
-                    cropRect.width = imageWidth - cropRect.x;
-                }
-            }
-            
-            // Y position slider
-            if (ImGui::SliderInt("Y Position", &cropRect.y, 0, imageHeight - 1, nullptr, ImGuiSliderFlags_None)) {
-                // Ensure height is valid
-                if (cropRect.y + cropRect.height > imageHeight) {
-                    cropRect.height = imageHeight - cropRect.y;
-                }
-            }
-            
-            // Width slider
-            if (ImGui::SliderInt("Width", &cropRect.width, 1, imageWidth - cropRect.x, nullptr, ImGuiSliderFlags_None)) {
-                // No additional validation needed
-            }
-            
-            // Height slider
-            if (ImGui::SliderInt("Height", &cropRect.height, 1, imageHeight - cropRect.y, nullptr, ImGuiSliderFlags_None)) {
-                // No additional validation needed
-            }
-            
-            ImGui::Text("Crop Region: %d x %d at (%d, %d)", 
-                       cropRect.width, cropRect.height, cropRect.x, cropRect.y);
-            
-            // Display crop region as a percentage of the image
-            if (imageWidth > 0 && imageHeight > 0) {
-                float widthPercent = (float)cropRect.width / imageWidth * 100.0f;
-                float heightPercent = (float)cropRect.height / imageHeight * 100.0f;
-                ImGui::Text("Size: %.1f%% x %.1f%% of image", widthPercent, heightPercent);
-            }
-            
-            // Preset crop options
-            ImGui::Text("Preset Crops:");
-            ImGui::SameLine();
-            if (ImGui::Button("Center 50%", ImVec2(120.0f * uiScale, 30.0f * uiScale))) {
-                cropRect.x = imageWidth / 4;
-                cropRect.y = imageHeight / 4;
-                cropRect.width = imageWidth / 2;
-                cropRect.height = imageHeight / 2;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Center 75%", ImVec2(120.0f * uiScale, 30.0f * uiScale))) {
-                cropRect.x = imageWidth / 8;
-                cropRect.y = imageHeight / 8;
-                cropRect.width = imageWidth * 3 / 4;
-                cropRect.height = imageHeight * 3 / 4;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Full Image", ImVec2(120.0f * uiScale, 30.0f * uiScale))) {
-                cropRect.x = 0;
-                cropRect.y = 0;
-                cropRect.width = imageWidth;
-                cropRect.height = imageHeight;
             }
         }
         
         // Adjustments
         if (ImGui::CollapsingHeader("Adjustments", ImGuiTreeNodeFlags_DefaultOpen)) {
-            // Increase slider height
-            float sliderHeight = 30.0f * uiScale;
-            
             // Brightness slider
-            if (ImGui::SliderFloat("Brightness", &params.brightness, -100.0f, 100.0f, "%.1f", ImGuiSliderFlags_None)) {
+            if (ImGui::SliderFloat("Brightness", &params.brightness, -100.0f, 100.0f, "%.1f")) {
                 updateImage();
             }
             
             // Contrast slider
-            if (ImGui::SliderFloat("Contrast", &params.contrast, 1.0f, 300.0f, "%.1f", ImGuiSliderFlags_None)) {
+            if (ImGui::SliderFloat("Contrast", &params.contrast, 1.0f, 300.0f, "%.1f")) {
                 updateImage();
             }
             
             // Blur size slider
-            if (ImGui::SliderFloat("Blur Size", &params.blurSize, 0.0f, 15.0f, "%.1f", ImGuiSliderFlags_None)) {
+            if (ImGui::SliderFloat("Blur Size", &params.blurSize, 0.0f, 15.0f, "%.1f")) {
                 updateImage();
             }
             
             // Rotation slider
-            if (ImGui::SliderFloat("Rotation", &params.rotationAngle, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None)) {
+            if (ImGui::SliderFloat("Rotation", &params.rotationAngle, 0.0f, 360.0f, "%.1f")) {
                 updateImage();
             }
             
             // Resize slider
-            // if (ImGui::SliderFloat("Resize %", &params.resizeRatio, 10.0f, 300.0f, "%.1f")) {
-            //     updateImage();
-            // }
+            if (ImGui::SliderFloat("Resize %", &params.resizeRatio, 10.0f, 300.0f, "%.1f")) {
+                updateImage();
+            }
         }
         
         // Image info
@@ -908,12 +834,6 @@ public:
         // Setup style
         ImGui::StyleColorsDark();
         
-        // Increase font size
-        ImFontConfig fontConfig;
-        fontConfig.OversampleH = 3;
-        fontConfig.OversampleV = 3;
-        io.Fonts->AddFontDefault(&fontConfig);
-        
         // Setup Platform/Renderer backends
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init("#version 130");
@@ -927,16 +847,6 @@ public:
         while (!glfwWindowShouldClose(window)) {
             // Poll and handle events
             glfwPollEvents();
-            
-            // Get current window size
-            int width, height;
-            glfwGetWindowSize(window, &width, &height);
-            
-            // Update window dimensions if changed
-            if (width != windowWidth || height != windowHeight) {
-                windowWidth = width;
-                windowHeight = height;
-            }
             
             // Start the ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
@@ -970,8 +880,14 @@ public:
 
 // Main function
 int main(int argc, char* argv[]) {
-    string imagePath = "";
-
+    string imagePath = "/home/quant/testing_codes_github/node_based_image_manipulation_interface/assets/anime_girl.jpg";
+    
+    // Check if image path is provided as command-line argument
+    // if (argc > 1) {
+    //     imagePath = argv[1];
+    // }
+    
+    // Create an instance of the editor
     ImageEditorGUI editor(imagePath);
     
     // Start the application
