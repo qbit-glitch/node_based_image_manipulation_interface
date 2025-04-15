@@ -177,6 +177,17 @@ private:
         int blendMode = 0;            // 0: Normal, 1: Multiply, 2: Screen, 3: Overlay, 4: Difference
         float blendOpacity = 1.0f;    // Range 0 to 1
         string blendImagePath = "";    // Path to the second image for blending
+        
+        // Noise parameters
+        int noiseType = 0;            // 0: Perlin, 1: Simplex, 2: Worley, 3: Value, 4: Fractal Brownian Motion
+        float noiseScale = 10.0f;     // Scale of the noise (higher = finer detail)
+        float noiseAmplitude = 1.0f;  // Amplitude of the noise (0-1)
+        int noiseOctaves = 4;         // Number of octaves for FBM (1-8)
+        float noisePersistence = 0.5f; // Persistence for FBM (0-1)
+        float noiseLacunarity = 2.0f; // Lacunarity for FBM (1-4)
+        bool noiseInvert = false;     // Invert the noise pattern
+        bool noiseColorize = false;   // Apply color to the noise
+        float noiseColor[3] = {0.0f, 0.5f, 1.0f}; // Color for noise (BGR)
     } params;
     
     // OpenGL texture for displaying the image
@@ -227,7 +238,8 @@ private:
         BLUR,
         THRESHOLD,
         EDGE_DETECTION,
-        BLEND
+        BLEND,
+        NOISE
     };
     ActiveOperation activeOperation = NONE;
 
@@ -581,7 +593,7 @@ public:
         } else {
             // Just use the edges as the result
             if (edges.channels() == 1) {
-                cvtColor(edges, workingImage, COLOR_GRAY2BGR);
+        cvtColor(edges, workingImage, COLOR_GRAY2BGR);
             } else {
                 workingImage = edges.clone();
             }
@@ -1025,6 +1037,185 @@ public:
         updateTexture();
     }
     
+    // Apply noise to the image
+    void applyNoise() {
+        if (workingImage.empty()) {
+            cout << "No image loaded yet." << endl;
+            return;
+        }
+        
+        // Add current state to history before applying changes
+        addToHistory(workingImage);
+        
+        // Create a noise pattern
+        Mat noisePattern = Mat::zeros(workingImage.size(), CV_32F);
+        
+        // Generate noise based on selected type
+        switch (params.noiseType) {
+            case 0: // Perlin noise
+                generatePerlinNoise(noisePattern, params.noiseScale);
+                break;
+            case 1: // Simplex noise
+                generateSimplexNoise(noisePattern, params.noiseScale);
+                break;
+            case 2: // Worley noise
+                generateWorleyNoise(noisePattern, params.noiseScale);
+                break;
+            case 3: // Value noise
+                generateValueNoise(noisePattern, params.noiseScale);
+                break;
+            case 4: // Fractal Brownian Motion
+                generateFBMNoise(noisePattern, params.noiseScale, params.noiseOctaves, 
+                                params.noisePersistence, params.noiseLacunarity);
+                break;
+        }
+        
+        // Normalize noise to 0-1 range
+        normalize(noisePattern, noisePattern, 0, 1, NORM_MINMAX);
+        
+        // Invert if needed
+        if (params.noiseInvert) {
+            noisePattern = 1.0 - noisePattern;
+        }
+        
+        // Apply amplitude
+        noisePattern *= params.noiseAmplitude;
+        
+        // Convert noise to BGR if colorize is enabled
+        Mat noiseBGR;
+        if (params.noiseColorize) {
+            noiseBGR = Mat::zeros(workingImage.size(), CV_8UC3);
+            for (int y = 0; y < noisePattern.rows; y++) {
+                for (int x = 0; x < noisePattern.cols; x++) {
+                    float value = noisePattern.at<float>(y, x);
+                    noiseBGR.at<Vec3b>(y, x)[0] = static_cast<uchar>(params.noiseColor[0] * value * 255); // B
+                    noiseBGR.at<Vec3b>(y, x)[1] = static_cast<uchar>(params.noiseColor[1] * value * 255); // G
+                    noiseBGR.at<Vec3b>(y, x)[2] = static_cast<uchar>(params.noiseColor[2] * value * 255); // R
+                }
+            }
+        } else {
+            // Convert to grayscale
+            noisePattern.convertTo(noiseBGR, CV_8UC1, 255.0);
+            cvtColor(noiseBGR, noiseBGR, COLOR_GRAY2BGR);
+        }
+        
+        // Blend with original image
+        Mat result;
+        addWeighted(workingImage, 1.0 - params.noiseAmplitude, noiseBGR, params.noiseAmplitude, 0, result);
+        
+        // Update the working image
+        workingImage = result.clone();
+        
+        // Update the texture
+        updateTexture();
+    }
+    
+    // Generate Perlin noise
+    void generatePerlinNoise(Mat& noise, float scale) {
+        // Simple implementation of Perlin noise
+        for (int y = 0; y < noise.rows; y++) {
+            for (int x = 0; x < noise.cols; x++) {
+                float nx = x / scale;
+                float ny = y / scale;
+                
+                // Simple 2D Perlin noise approximation
+                float value = 0.5f * (1.0f + sin(nx) * cos(ny));
+                noise.at<float>(y, x) = value;
+            }
+        }
+    }
+    
+    // Generate Simplex noise
+    void generateSimplexNoise(Mat& noise, float scale) {
+        // Simple implementation of Simplex noise
+        for (int y = 0; y < noise.rows; y++) {
+            for (int x = 0; x < noise.cols; x++) {
+                float nx = x / scale;
+                float ny = y / scale;
+                
+                // Simple 2D Simplex noise approximation
+                float value = 0.5f * (1.0f + sin(nx + ny) * cos(nx - ny));
+                noise.at<float>(y, x) = value;
+            }
+        }
+    }
+    
+    // Generate Worley noise
+    void generateWorleyNoise(Mat& noise, float scale) {
+        // Simple implementation of Worley noise
+        vector<Point2f> points;
+        int numPoints = static_cast<int>(noise.rows * noise.cols / (scale * scale));
+        
+        // Generate random points
+        for (int i = 0; i < numPoints; i++) {
+            float x = static_cast<float>(rand()) / RAND_MAX * noise.cols;
+            float y = static_cast<float>(rand()) / RAND_MAX * noise.rows;
+            points.push_back(Point2f(x, y));
+        }
+        
+        // Calculate distance to nearest point
+        for (int y = 0; y < noise.rows; y++) {
+            for (int x = 0; x < noise.cols; x++) {
+                float minDist = FLT_MAX;
+                for (const auto& p : points) {
+                    float dx = x - p.x;
+                    float dy = y - p.y;
+                    float dist = sqrt(dx*dx + dy*dy);
+                    minDist = min(minDist, dist);
+                }
+                
+                // Normalize distance
+                noise.at<float>(y, x) = minDist / (noise.rows * 0.5f);
+            }
+        }
+    }
+    
+    // Generate Value noise
+    void generateValueNoise(Mat& noise, float scale) {
+        // Simple implementation of Value noise
+        for (int y = 0; y < noise.rows; y++) {
+            for (int x = 0; x < noise.cols; x++) {
+                float nx = x / scale;
+                float ny = y / scale;
+                
+                // Simple 2D Value noise approximation
+                float value = 0.5f * (1.0f + sin(nx * ny));
+                noise.at<float>(y, x) = value;
+            }
+        }
+    }
+    
+    // Generate Fractal Brownian Motion noise
+    void generateFBMNoise(Mat& noise, float scale, int octaves, float persistence, float lacunarity) {
+        Mat tempNoise = Mat::zeros(noise.size(), CV_32F);
+        float amplitude = 1.0f;
+        float frequency = 1.0f / scale;
+        float maxValue = 0.0f;
+        
+        // Generate base noise
+        generatePerlinNoise(tempNoise, scale);
+        
+        // Initialize result
+        noise = tempNoise.clone() * amplitude;
+        maxValue = amplitude;
+        
+        // Add octaves
+        for (int i = 1; i < octaves; i++) {
+            amplitude *= persistence;
+            frequency *= lacunarity;
+            
+            // Generate noise at this octave
+            generatePerlinNoise(tempNoise, scale / frequency);
+            
+            // Add to result
+            noise += tempNoise * amplitude;
+            maxValue += amplitude;
+        }
+        
+        // Normalize
+        noise /= maxValue;
+    }
+    
     // Render the ImGui interface
     void renderUI() {
         // Main window
@@ -1184,6 +1375,7 @@ public:
                 {"Threshold", [this]() { activeOperation = THRESHOLD; }},
                 {"Edge Detection", [this]() { activeOperation = EDGE_DETECTION; }},
                 {"Blend", [this]() { activeOperation = BLEND; }},
+                {"Noise", [this]() { activeOperation = NOISE; }},
                 {"Crop Image", [this]() { enterCropMode(); }},
                 {"Split Channels", [this]() { splitImageChannels(); showChannelSplitter = true; }}
             };
@@ -1197,7 +1389,7 @@ public:
                 }
                 
                 if (i > 0 && i % buttonsPerRow != 0) {
-                    ImGui::SameLine();
+            ImGui::SameLine();
                 }
                 
                 if (ImGui::Button(buttons[i].label, ImVec2(120, 30))) {
@@ -1270,10 +1462,10 @@ public:
                         // Brightness slider
                         if (ImGui::SliderFloat("Brightness", &params.brightness, -100.0f, 100.0f, "%.1f")) {
                             updateImage();
-                        }
-                        
-                        ImGui::Spacing();
-                        
+            }
+            
+            ImGui::Spacing();
+            
                         // Apply button
                         if (ImGui::Button("Apply Brightness", ImVec2(150, 30))) {
                             updateImage();
@@ -1287,10 +1479,10 @@ public:
                         // Contrast slider
                         if (ImGui::SliderFloat("Contrast", &params.contrast, 1.0f, 300.0f, "%.1f")) {
                             updateImage();
-                        }
-                        
-                        ImGui::Spacing();
-                        
+            }
+            
+            ImGui::Spacing();
+            
                         // Apply button
                         if (ImGui::Button("Apply Contrast", ImVec2(150, 30))) {
                             updateImage();
@@ -1304,10 +1496,10 @@ public:
                         // Rotation slider
                         if (ImGui::SliderFloat("Rotation Angle", &params.rotationAngle, 0.0f, 360.0f, "%.1f")) {
                             updateImage();
-                        }
-                        
-                        ImGui::Spacing();
-                        
+            }
+            
+            ImGui::Spacing();
+            
                         // Apply button
                         if (ImGui::Button("Apply Rotation", ImVec2(150, 30))) {
                             updateImage();
@@ -1364,8 +1556,8 @@ public:
                         
                         // Apply button
                         if (ImGui::Button("Apply Blur", ImVec2(150, 30))) {
-                            applyBlur();
-                        }
+                applyBlur();
+            }
                         break;
                         
                     case THRESHOLD:
@@ -1397,10 +1589,10 @@ public:
                         } else if (params.thresholdMethod == 2) { // Otsu threshold
                             ImGui::SliderInt("Max Value", &params.thresholdMaxValue, 0, 255);
                             ImGui::Text("Otsu's method automatically determines the optimal threshold value.");
-                        }
-                        
-                        ImGui::Spacing();
-                        
+            }
+            
+            ImGui::Spacing();
+            
                         // Histogram display
                         ImGui::Text("Image Histogram");
                         
@@ -1563,6 +1755,48 @@ public:
                         // Apply button
                         if (ImGui::Button("Apply Blend", ImVec2(150, 30))) {
                             applyBlend();
+                        }
+                        break;
+                        
+                    case NOISE:
+                        ImGui::Text("Noise Generation Properties");
+                        ImGui::Separator();
+                        
+                        // Noise type selection
+                        const char* noiseTypes[] = { "Perlin", "Simplex", "Worley", "Value", "Fractal Brownian Motion" };
+                        ImGui::Combo("Noise Type", &params.noiseType, noiseTypes, IM_ARRAYSIZE(noiseTypes));
+                        
+                        ImGui::Spacing();
+                        
+                        // Common parameters
+                        ImGui::SliderFloat("Scale", &params.noiseScale, 1.0f, 50.0f, "%.1f");
+                        ImGui::SliderFloat("Amplitude", &params.noiseAmplitude, 0.0f, 1.0f, "%.2f");
+                        
+                        // FBM specific parameters
+                        if (params.noiseType == 4) { // Fractal Brownian Motion
+                            ImGui::SliderInt("Octaves", &params.noiseOctaves, 1, 8);
+                            ImGui::SliderFloat("Persistence", &params.noisePersistence, 0.0f, 1.0f, "%.2f");
+                            ImGui::SliderFloat("Lacunarity", &params.noiseLacunarity, 1.0f, 4.0f, "%.2f");
+                        }
+                        
+                        ImGui::Spacing();
+                        
+                        // Invert option
+                        ImGui::Checkbox("Invert Noise", &params.noiseInvert);
+                        
+                        // Colorize option
+                        ImGui::Checkbox("Colorize Noise", &params.noiseColorize);
+                        
+                        if (params.noiseColorize) {
+                            ImGui::Text("Noise Color (BGR):");
+                            ImGui::ColorEdit3("##NoiseColor", params.noiseColor);
+                        }
+                        
+                        ImGui::Spacing();
+                        
+                        // Apply button
+                        if (ImGui::Button("Apply Noise", ImVec2(150, 30))) {
+                            applyNoise();
                         }
                         break;
                 }
