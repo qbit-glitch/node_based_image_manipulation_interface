@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/quant/testing_codes_github/node_based_image_manipulation_interface/build/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

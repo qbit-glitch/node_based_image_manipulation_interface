@@ -783,6 +783,7 @@ public:
         }
         
         cropMode = true;
+        isDragging = false;
         cout << "Crop mode activated. Draw a rectangle on the image." << endl;
     }
     
@@ -795,24 +796,27 @@ public:
         // Add current state to history before applying changes
         addToHistory(workingImage);
         
-        // Normalize the rectangle (ensure width and height are positive)
-        cropRect = normalizeRect(cropRect);
+        // Ensure the crop rectangle is within image bounds
+        cropRect.x = std::max(0, std::min(cropRect.x, workingImage.cols - 1));
+        cropRect.y = std::max(0, std::min(cropRect.y, workingImage.rows - 1));
+        cropRect.width = std::min(cropRect.width, workingImage.cols - cropRect.x);
+        cropRect.height = std::min(cropRect.height, workingImage.rows - cropRect.y);
         
         // Check if rectangle is valid
-        if (cropRect.width > 0 && cropRect.height > 0 && 
-            cropRect.x >= 0 && cropRect.y >= 0 && 
-            cropRect.x + cropRect.width <= workingImage.cols && 
-            cropRect.y + cropRect.height <= workingImage.rows) {
-            
-            // Crop the image
+        if (cropRect.width > 0 && cropRect.height > 0) {
+            // Create a deep copy of the cropped region
             Mat cropped = workingImage(cropRect).clone();
             
-            // Update original and working images
-            originalImage = cropped.clone();
+            // Update working image with the cropped region
             workingImage = cropped.clone();
+            
+            // Update image dimensions
+            imageWidth = workingImage.cols;
+            imageHeight = workingImage.rows;
             
             // Exit crop mode
             cropMode = false;
+            isDragging = false;
             
             // Update the texture
             updateTexture();
@@ -825,6 +829,11 @@ public:
     void cancelCrop() {
         if (cropMode) {
             cropMode = false;
+            isDragging = false;
+            // Restore the original image display
+            if (!workingImage.empty()) {
+                updateTexture();
+            }
             cout << "Crop operation canceled." << endl;
         }
     }
@@ -832,10 +841,10 @@ public:
     // Helper function to normalize rectangle (ensure positive width/height)
     Rect normalizeRect(const Rect& rect) {
         Rect result;
-        result.x = min(rect.x, rect.x + rect.width);
-        result.y = min(rect.y, rect.y + rect.height);
-        result.width = abs(rect.width);
-        result.height = abs(rect.height);
+        result.x = std::min(rect.x, rect.x + rect.width);
+        result.y = std::min(rect.y, rect.y + rect.height);
+        result.width = std::abs(rect.width);
+        result.height = std::abs(rect.height);
         return result;
     }
     
@@ -850,18 +859,23 @@ public:
         splitChannels.clear();
         grayscaleChannels.clear();
         
-        // Split the image into channels
+        // Split the image into BGR channels
         split(workingImage, splitChannels);
         
-        // Create grayscale versions of each channel
-        for (const auto& channel : splitChannels) {
-            Mat grayscale;
-            cvtColor(channel, grayscale, COLOR_GRAY2BGR);
-            grayscaleChannels.push_back(grayscale);
+        // Create colored versions of each channel
+        for (int i = 0; i < splitChannels.size(); i++) {
+            Mat colorChannel = Mat::zeros(splitChannels[i].size(), CV_8UC3);
+            vector<Mat> channels(3, Mat::zeros(splitChannels[i].size(), CV_8UC1));
+            channels[i] = splitChannels[i];  // Put the channel in its correct position (B=0, G=1, R=2)
+            merge(channels, colorChannel);
+            grayscaleChannels.push_back(colorChannel);
         }
         
-        // Create or update textures for each channel
+        // Update textures for each channel
         updateChannelTextures();
+        
+        // Set active operation to NONE to show channels in properties panel
+        activeOperation = NONE;
     }
     
     // Update textures for split channels
@@ -902,8 +916,8 @@ public:
             channelTextures.push_back(texture);
         }
         
-        // Create new textures for grayscale versions
-        for (const auto& grayscale : grayscaleChannels) {
+        // Create new textures for colored versions
+        for (const auto& colorChannel : grayscaleChannels) {
             GLuint texture = 0;
             glGenTextures(1, &texture);
             glBindTexture(GL_TEXTURE_2D, texture);
@@ -912,10 +926,10 @@ public:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             
-            // Convert to RGB for OpenGL
-            Mat rgbGrayscale;
-            cvtColor(grayscale, rgbGrayscale, COLOR_BGR2RGB);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgbGrayscale.cols, rgbGrayscale.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, rgbGrayscale.data);
+            // Convert BGR to RGB for OpenGL
+            Mat rgbChannel;
+            cvtColor(colorChannel, rgbChannel, COLOR_BGR2RGB);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rgbChannel.cols, rgbChannel.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, rgbChannel.data);
             glBindTexture(GL_TEXTURE_2D, 0);
             
             grayscaleTextures.push_back(texture);
@@ -1315,7 +1329,8 @@ public:
     // Render the ImGui interface
     void renderUI() {
         // Main window
-        ImGui::Begin("Image Editor", nullptr, ImGuiWindowFlags_MenuBar);
+        ImGui::Begin("Image Editor", nullptr, 
+            cropMode ? (ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoMove) : ImGuiWindowFlags_MenuBar);
         
         // Menu bar
         if (ImGui::BeginMenuBar()) {
@@ -1368,7 +1383,8 @@ public:
         ImGui::Columns(2, "MainColumns", true);
         
         // Left column: Image display
-        ImGui::BeginChild("ImageDisplay", ImVec2(0, 0), true);
+        ImGui::BeginChild("ImageDisplay", ImVec2(0, 0), true, 
+            cropMode ? ImGuiWindowFlags_NoMove : 0);
         
         // Display the image
         if (imageTexture != 0) {
@@ -1389,47 +1405,81 @@ public:
             float xPos = (ImGui::GetContentRegionAvail().x - displayWidth) * 0.5f;
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + xPos);
             
+            // Store image position and size for crop calculations
+            ImVec2 imagePos = ImGui::GetCursorScreenPos();
+            ImVec2 imageSize = ImVec2(displayWidth, displayHeight);
+            
             // Display the image
-            ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<unsigned long long>(imageTexture)), ImVec2(displayWidth, displayHeight));
+            ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<unsigned long long>(imageTexture)), imageSize);
             
             // Handle crop mode
             if (cropMode) {
                 ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Crop Mode Active - Draw a rectangle on the image");
                 
-                // Handle mouse input for crop selection
+                // Get mouse position relative to window
                 ImVec2 mousePos = ImGui::GetMousePos();
-                ImVec2 imagePos = ImGui::GetItemRectMin();
+                ImVec2 windowPos = ImGui::GetWindowPos();
+                
+                // Calculate mouse position relative to image
+                float mouseX = mousePos.x - imagePos.x;
+                float mouseY = mousePos.y - imagePos.y;
                 
                 // Check if mouse is over the image
-                if (ImGui::IsMouseHoveringRect(imagePos, ImVec2(imagePos.x + displayWidth, imagePos.y + displayHeight))) {
+                bool isMouseOverImage = mouseX >= 0 && mouseX < imageSize.x && 
+                                     mouseY >= 0 && mouseY < imageSize.y;
+                
+                if (isMouseOverImage) {
                     // Convert mouse position to image coordinates
-                    float scaleX = static_cast<float>(imageWidth) / displayWidth;
-                    float scaleY = static_cast<float>(imageHeight) / displayHeight;
-                    
-                    int imgX = static_cast<int>((mousePos.x - imagePos.x) * scaleX);
-                    int imgY = static_cast<int>((mousePos.y - imagePos.y) * scaleY);
+                    float relativeX = mouseX / imageSize.x;
+                    float relativeY = mouseY / imageSize.y;
                     
                     // Handle mouse events
-                    if (ImGui::IsMouseClicked(0)) {
+                    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                         isDragging = true;
-                        dragStart = ImVec2(static_cast<float>(imgX), static_cast<float>(imgY));
+                        dragStart = ImVec2(relativeX * imageWidth, relativeY * imageHeight);
                         dragEnd = dragStart;
-                    } else if (ImGui::IsMouseDragging(0) && isDragging) {
-                        dragEnd = ImVec2(static_cast<float>(imgX), static_cast<float>(imgY));
+                    } 
+                    else if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && isDragging) {
+                        dragEnd = ImVec2(relativeX * imageWidth, relativeY * imageHeight);
                         
                         // Update crop rectangle
-                        cropRect.x = static_cast<int>(min(dragStart.x, dragEnd.x));
-                        cropRect.y = static_cast<int>(min(dragStart.y, dragEnd.y));
-                        cropRect.width = static_cast<int>(abs(dragEnd.x - dragStart.x));
-                        cropRect.height = static_cast<int>(abs(dragEnd.y - dragStart.y));
+                        cropRect.x = static_cast<int>(std::min(dragStart.x, dragEnd.x));
+                        cropRect.y = static_cast<int>(std::min(dragStart.y, dragEnd.y));
+                        cropRect.width = static_cast<int>(std::abs(dragEnd.x - dragStart.x));
+                        cropRect.height = static_cast<int>(std::abs(dragEnd.y - dragStart.y));
                         
-                        // Create a temporary image with the crop rectangle drawn
-                        tempImage = workingImage.clone();
-                        rectangle(tempImage, cropRect, Scalar(0, 255, 0), 2);
-                        updateTexture();
-                    } else if (ImGui::IsMouseReleased(0) && isDragging) {
+                        // Draw the crop rectangle
+                        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                        
+                        // Convert image coordinates back to screen coordinates for drawing
+                        ImVec2 rectMin = ImVec2(
+                            imagePos.x + (std::min(dragStart.x, dragEnd.x) / imageWidth) * imageSize.x,
+                            imagePos.y + (std::min(dragStart.y, dragEnd.y) / imageHeight) * imageSize.y
+                        );
+                        ImVec2 rectMax = ImVec2(
+                            imagePos.x + (std::max(dragStart.x, dragEnd.x) / imageWidth) * imageSize.x,
+                            imagePos.y + (std::max(dragStart.y, dragEnd.y) / imageHeight) * imageSize.y
+                        );
+                        
+                        // Draw filled rectangle with semi-transparent color
+                        draw_list->AddRectFilled(rectMin, rectMax, IM_COL32(255, 255, 255, 50));
+                        // Draw rectangle border
+                        draw_list->AddRect(rectMin, rectMax, IM_COL32(0, 255, 0, 255), 0.0f, ImDrawFlags_None, 2.0f);
+                    } 
+                    else if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
                         isDragging = false;
                     }
+                }
+                
+                // Add crop control buttons below the image
+                ImGui::Spacing();
+                ImGui::Spacing();
+                if (ImGui::Button("Apply Crop", ImVec2(180, 50))) {
+                    applyCrop();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel Crop", ImVec2(180, 50))) {
+                    cancelCrop();
                 }
             }
         } else {
@@ -1447,7 +1497,7 @@ public:
         if (ImGui::CollapsingHeader("Image Operations", ImGuiTreeNodeFlags_DefaultOpen)) {
             // Create a more dynamic button layout
             float windowWidth = ImGui::GetContentRegionAvail().x;
-            int buttonsPerRow = static_cast<int>(windowWidth / 130); // 120px button width + 10px spacing
+            int buttonsPerRow = static_cast<int>(windowWidth / 250); // Increased from 200 to 250 for wider buttons
             if (buttonsPerRow < 1) buttonsPerRow = 1;
             
             // Define all buttons with their labels and actions
@@ -1474,22 +1524,25 @@ public:
                 {"Noise", [this]() { activeOperation = NOISE; }},
                 {"Convolution", [this]() { activeOperation = CONVOLUTION; }},
                 {"Crop Image", [this]() { enterCropMode(); }},
-                {"Split Channels", [this]() { splitImageChannels(); showChannelSplitter = true; }}
+                {"Split Channels", [this]() { splitImageChannels(); }}
             };
             
-            // Render buttons in a grid with increased vertical spacing
+            // Render buttons in a grid with increased spacing and size
             for (size_t i = 0; i < buttons.size(); i++) {
                 // Add vertical spacing between rows
                 if (i > 0 && i % buttonsPerRow == 0) {
                     ImGui::Spacing();
-                    ImGui::Spacing(); // Double spacing for more vertical separation
+                    ImGui::Spacing();
+                    ImGui::Spacing(); // Triple spacing for more vertical separation
                 }
                 
                 if (i > 0 && i % buttonsPerRow != 0) {
-            ImGui::SameLine();
+                    ImGui::SameLine(0, 25.0f); // Increased horizontal spacing between buttons from 20 to 25
                 }
                 
-                if (ImGui::Button(buttons[i].label, ImVec2(120, 30))) {
+                // Calculate button width to fit the available space
+                float buttonWidth = (windowWidth - (buttonsPerRow - 1) * 25.0f) / buttonsPerRow;
+                if (ImGui::Button(buttons[i].label, ImVec2(buttonWidth - 5.0f, 50.0f))) { // Reduced padding from 10 to 5
                     buttons[i].action();
                 }
             }
@@ -1497,33 +1550,71 @@ public:
             // Add extra spacing after all buttons
             ImGui::Spacing();
             ImGui::Spacing();
+            ImGui::Spacing();
         }
         
         // Properties Pane - Resizable
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         
         // Properties header with resize handle
-        ImGui::PushID("PropertiesHeader");
         ImGui::SetNextItemOpen(true, ImGuiCond_Once);
         bool propertiesOpen = ImGui::CollapsingHeader("Properties", ImGuiTreeNodeFlags_DefaultOpen);
         
-        // Add a resize handle below the header
-        ImGui::InvisibleButton("##PropertiesResize", ImVec2(-1, 5));
+        // Add a resize handle for properties pane
+        ImGui::Button("##PropertiesResizeHandle", ImVec2(-1, 8));
         if (ImGui::IsItemActive()) {
-            float delta = ImGui::GetIO().MouseDelta.y;
-            propertiesPaneHeight = std::clamp(propertiesPaneHeight - delta, 100.0f, 600.0f);
+            propertiesPaneHeight = std::max(100.0f, propertiesPaneHeight + ImGui::GetIO().MouseDelta.y);
         }
-        ImGui::PopID();
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+        }
         
-        ImGui::PopStyleVar(2);
+        ImGui::PopStyleVar();
         
         // Properties content
         if (propertiesOpen) {
             ImGui::BeginChild("PropertiesContent", ImVec2(0, propertiesPaneHeight), true);
             
             if (activeOperation == NONE) {
-                ImGui::Text("Select an operation to view its properties.");
+                // Display channel splitter in properties when no other operation is active
+                if (!splitChannels.empty()) {
+                    ImGui::Text("Channel Splitter");
+                    ImGui::Separator();
+                    
+                    // Toggle between regular and grayscale views
+                    ImGui::Checkbox("Show Color Channels", &showGrayscaleChannels);
+                    
+                    ImGui::Spacing();
+                    
+                    // Get the current textures to display
+                    const vector<GLuint>& displayTextures = showGrayscaleChannels ? grayscaleTextures : channelTextures;
+                    
+                    // Calculate the available width for the channel display
+                    float availableWidth = ImGui::GetContentRegionAvail().x;
+                    float channelWidth = availableWidth;
+                    float aspectRatio = static_cast<float>(workingImage.cols) / static_cast<float>(workingImage.rows);
+                    float channelHeight = channelWidth / aspectRatio;
+                    
+                    // Display each channel
+                    const char* channelNames[] = { "Blue Channel", "Green Channel", "Red Channel" };
+                    for (size_t i = 0; i < displayTextures.size(); ++i) {
+                        ImGui::Text("%s", channelNames[i]);
+                        
+                        // Center the image
+                        float xPos = (availableWidth - channelWidth) * 0.5f;
+                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + xPos);
+                        
+                        // Display the channel
+                        ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<unsigned long long>(displayTextures[i])), 
+                                   ImVec2(channelWidth, channelHeight));
+                        
+                        ImGui::Spacing();
+                        ImGui::Separator();
+                        ImGui::Spacing();
+                    }
+                } else {
+                    ImGui::Text("Select an operation to view its properties.");
+                }
             } else {
                 // Display properties based on active operation
                 
@@ -1569,7 +1660,7 @@ public:
             ImGui::Spacing();
             
                         // Apply button
-                        if (ImGui::Button("Apply Brightness", ImVec2(150, 30))) {
+                        if (ImGui::Button("Apply Brightness", ImVec2(220, 50))) {
                             updateImage();
                         }
                         break;
@@ -1586,7 +1677,7 @@ public:
             ImGui::Spacing();
             
                         // Apply button
-                        if (ImGui::Button("Apply Contrast", ImVec2(150, 30))) {
+                        if (ImGui::Button("Apply Contrast", ImVec2(220, 50))) {
                             updateImage();
                         }
                         break;
@@ -1603,7 +1694,7 @@ public:
             ImGui::Spacing();
             
                         // Apply button
-                        if (ImGui::Button("Apply Rotation", ImVec2(150, 30))) {
+                        if (ImGui::Button("Apply Rotation", ImVec2(220, 50))) {
                             updateImage();
                         }
                         break;
@@ -1657,7 +1748,7 @@ public:
                         ImGui::Spacing();
                         
                         // Apply button
-                        if (ImGui::Button("Apply Blur", ImVec2(150, 30))) {
+                        if (ImGui::Button("Apply Blur", ImVec2(220, 50))) {
                 applyBlur();
             }
                         break;
@@ -1764,7 +1855,7 @@ public:
                         ImGui::Spacing();
                         
                         // Apply button
-                        if (ImGui::Button("Apply Threshold", ImVec2(150, 30))) {
+                        if (ImGui::Button("Apply Threshold", ImVec2(220, 50))) {
                             applyThreshold();
                         }
                         break;
@@ -1815,7 +1906,7 @@ public:
                         ImGui::Spacing();
                         
                         // Apply button
-                        if (ImGui::Button("Apply Edge Detection", ImVec2(150, 30))) {
+                        if (ImGui::Button("Apply Edge Detection", ImVec2(220, 50))) {
                             applyEdgeDetection();
                         }
                         break;
@@ -1845,7 +1936,7 @@ public:
                         }
                         
                         // Button to select second image
-                        if (ImGui::Button("Select Image", ImVec2(150, 30))) {
+                        if (ImGui::Button("Select Image", ImVec2(180, 50))) {
                             string path = openFileDialog();
                             if (!path.empty()) {
                                 params.blendImagePath = path;
@@ -1855,7 +1946,7 @@ public:
                         ImGui::Spacing();
                         
                         // Apply button
-                        if (ImGui::Button("Apply Blend", ImVec2(150, 30))) {
+                        if (ImGui::Button("Apply Blend", ImVec2(220, 50))) {
                             applyBlend();
                         }
                         break;
@@ -1896,7 +1987,7 @@ public:
                         ImGui::Spacing();
                         
                         // Apply button
-                        if (ImGui::Button("Apply Noise", ImVec2(150, 30))) {
+                        if (ImGui::Button("Apply Noise", ImVec2(220, 50))) {
                             applyNoise();
                         }
                         break;
@@ -1951,11 +2042,11 @@ public:
                         ImGui::Spacing();
                         
                         // Apply button
-                        if (ImGui::Button("Apply Convolution", ImVec2(150, 30))) {
+                        if (ImGui::Button("Apply Convolution", ImVec2(220, 50))) {
                             applyConvolution();
                         }
                         ImGui::SameLine();
-                        if (ImGui::Button("Reset Kernel", ImVec2(150, 30))) {
+                        if (ImGui::Button("Reset Kernel", ImVec2(180, 50))) {
                             initializeDefaultKernels();
                         }
                         break;
@@ -1972,11 +2063,11 @@ public:
                     ImGui::Spacing();
                     
                     // Add Apply and Cancel buttons for crop operation
-                    if (ImGui::Button("Apply Crop", ImVec2(150, 30))) {
+                    if (ImGui::Button("Apply Crop", ImVec2(180, 50))) {
                         applyCrop();
                     }
                     ImGui::SameLine();
-                    if (ImGui::Button("Cancel Crop", ImVec2(150, 30))) {
+                    if (ImGui::Button("Cancel Crop", ImVec2(180, 50))) {
                         cancelCrop();
                     }
                 }
@@ -1985,24 +2076,26 @@ public:
             ImGui::EndChild();
         }
         
-        // Image info - Resizable
+        ImGui::Spacing();
+        ImGui::Spacing();
+        
+        // Image Info - Resizable
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         
         // Image Info header with resize handle
-        ImGui::PushID("ImageInfoHeader");
         ImGui::SetNextItemOpen(true, ImGuiCond_Once);
         bool imageInfoOpen = ImGui::CollapsingHeader("Image Info", ImGuiTreeNodeFlags_DefaultOpen);
         
-        // Add a resize handle below the header
-        ImGui::InvisibleButton("##ImageInfoResize", ImVec2(-1, 5));
+        // Add a resize handle for image info pane
+        ImGui::Button("##ImageInfoResizeHandle", ImVec2(-1, 8));
         if (ImGui::IsItemActive()) {
-            float delta = ImGui::GetIO().MouseDelta.y;
-            imageInfoPaneHeight = std::clamp(imageInfoPaneHeight - delta, 50.0f, 300.0f);
+            imageInfoPaneHeight = std::max(50.0f, imageInfoPaneHeight + ImGui::GetIO().MouseDelta.y);
         }
-        ImGui::PopID();
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+        }
         
-        ImGui::PopStyleVar(2);
+        ImGui::PopStyleVar();
         
         // Image Info content
         if (imageInfoOpen) {
@@ -2064,66 +2157,6 @@ public:
             ImGui::BulletText("Cancel Crop: Cancel the crop operation");
             ImGui::End();
         }
-        
-        // Channel Splitter Window
-        if (showChannelSplitter && !splitChannels.empty()) {
-            ImGui::Begin("Channel Splitter", &showChannelSplitter, ImGuiWindowFlags_AlwaysAutoResize);
-            
-            // Toggle between regular and grayscale views
-            ImGui::Checkbox("Show Grayscale Channels", &showGrayscaleChannels);
-            
-            ImGui::Spacing();
-            
-            // Get the current textures to display
-            const vector<GLuint>& displayTextures = showGrayscaleChannels ? grayscaleTextures : channelTextures;
-            const vector<Mat>& displayChannels = showGrayscaleChannels ? grayscaleChannels : splitChannels;
-            
-            // Display each channel
-            for (size_t i = 0; i < displayTextures.size(); ++i) {
-                string channelName;
-                if (displayChannels.size() == 3) {
-                    // RGB image
-                    switch (i) {
-                        case 0: channelName = "Red Channel"; break;
-                        case 1: channelName = "Green Channel"; break;
-                        case 2: channelName = "Blue Channel"; break;
-                    }
-                } else if (displayChannels.size() == 4) {
-                    // RGBA image
-                    switch (i) {
-                        case 0: channelName = "Red Channel"; break;
-                        case 1: channelName = "Green Channel"; break;
-                        case 2: channelName = "Blue Channel"; break;
-                        case 3: channelName = "Alpha Channel"; break;
-                    }
-                } else {
-                    // Other number of channels
-                    channelName = "Channel " + to_string(i);
-                }
-                
-                ImGui::Text("%s", channelName.c_str());
-                
-                // Calculate aspect ratio
-                float aspectRatio = static_cast<float>(displayChannels[i].cols) / static_cast<float>(displayChannels[i].rows);
-                
-                // Calculate display size while maintaining aspect ratio
-                float displayWidth = ImGui::GetContentRegionAvail().x;
-                float displayHeight = displayWidth / aspectRatio;
-                
-                // Center the image
-                float xPos = (ImGui::GetContentRegionAvail().x - displayWidth) * 0.5f;
-                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + xPos);
-                
-                // Display the channel
-                ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<unsigned long long>(displayTextures[i])), ImVec2(displayWidth, displayHeight));
-                
-                ImGui::Spacing();
-                ImGui::Separator();
-                ImGui::Spacing();
-            }
-            
-            ImGui::End();
-        }
     }
     
     // Main run loop
@@ -2150,6 +2183,53 @@ public:
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        
+        // Set up high DPI scaling
+        float dpi_scale = 2.0f;
+        ImGui::GetStyle().ScaleAllSizes(dpi_scale);
+        
+        // Load and scale fonts
+        ImFontConfig font_config;
+        font_config.SizePixels = 13.0f * dpi_scale; // Base font size * scale
+        io.Fonts->AddFontDefault(&font_config);
+        
+        // Customize ImGui style for better visibility at larger scale
+        ImGuiStyle& style = ImGui::GetStyle();
+        style.WindowPadding = ImVec2(20, 20);
+        style.WindowRounding = 7.0f;
+        style.FramePadding = ImVec2(8, 8);
+        style.FrameRounding = 5.0f;
+        style.ItemSpacing = ImVec2(16, 12);
+        style.ItemInnerSpacing = ImVec2(10, 8);
+        style.IndentSpacing = 30.0f;
+        style.ScrollbarSize = 20.0f;
+        style.ScrollbarRounding = 12.0f;
+        style.GrabMinSize = 8.0f;
+        style.GrabRounding = 4.0f;
+        
+        // Increase window size to accommodate larger UI
+        windowWidth = 1600;
+        windowHeight = 1000;
+        
+        // Setup colors with slightly adjusted alpha for better visibility
+        ImVec4* colors = style.Colors;
+        colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+        colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
+        colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.96f);
+        colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.16f, 0.16f, 0.60f);
+        colors[ImGuiCol_FrameBgHovered] = ImVec4(0.26f, 0.26f, 0.26f, 0.50f);
+        colors[ImGuiCol_FrameBgActive] = ImVec4(0.26f, 0.26f, 0.26f, 0.75f);
+        colors[ImGuiCol_TitleBg] = ImVec4(0.04f, 0.04f, 0.04f, 1.00f);
+        colors[ImGuiCol_TitleBgActive] = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);
+        colors[ImGuiCol_CheckMark] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+        colors[ImGuiCol_SliderGrab] = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
+        colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+        colors[ImGuiCol_Button] = ImVec4(0.26f, 0.59f, 0.98f, 0.50f);
+        colors[ImGuiCol_ButtonHovered] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+        colors[ImGuiCol_ButtonActive] = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
+        colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+        colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
+        colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
         
         // Setup style
         ImGui::StyleColorsDark();
