@@ -188,6 +188,13 @@ private:
         bool noiseInvert = false;     // Invert the noise pattern
         bool noiseColorize = false;   // Apply color to the noise
         float noiseColor[3] = {0.0f, 0.5f, 1.0f}; // Color for noise (BGR)
+
+        // Convolution parameters
+        int kernelSize = 3;           // 3x3 or 5x5
+        float kernel[25] = {0};       // Max size for 5x5 kernel
+        float kernelScale = 1.0f;     // Scale factor for kernel values
+        float kernelOffset = 0.0f;    // Offset added to result
+        int currentPreset = 0;        // 0: Custom, 1: Sharpen, 2: Emboss, 3: Edge Enhance
     } params;
     
     // OpenGL texture for displaying the image
@@ -239,13 +246,102 @@ private:
         THRESHOLD,
         EDGE_DETECTION,
         BLEND,
-        NOISE
+        NOISE,
+        CONVOLUTION
     };
     ActiveOperation activeOperation = NONE;
+
+    // Initialize default kernels
+    void initializeDefaultKernels() {
+        // Initialize kernel with zeros
+        std::fill(params.kernel, params.kernel + 25, 0.0f);
+        
+        // Set default 3x3 identity kernel
+        if (params.kernelSize == 3) {
+            params.kernel[0] = 0.0f; params.kernel[1] = 0.0f; params.kernel[2] = 0.0f;
+            params.kernel[3] = 0.0f; params.kernel[4] = 1.0f; params.kernel[5] = 0.0f;
+            params.kernel[6] = 0.0f; params.kernel[7] = 0.0f; params.kernel[8] = 0.0f;
+        } else {
+            // 5x5 identity kernel
+            params.kernel[12] = 1.0f; // Center pixel for 5x5
+        }
+    }
+
+    void applyPresetKernel() {
+        std::fill(params.kernel, params.kernel + 25, 0.0f);
+        params.kernelScale = 1.0f;
+        params.kernelOffset = 0.0f;
+        
+        switch (params.currentPreset) {
+            case 1: // Sharpen
+                params.kernelSize = 3;
+                params.kernel[0] = 0.0f; params.kernel[1] = -1.0f; params.kernel[2] = 0.0f;
+                params.kernel[3] = -1.0f; params.kernel[4] = 5.0f; params.kernel[5] = -1.0f;
+                params.kernel[6] = 0.0f; params.kernel[7] = -1.0f; params.kernel[8] = 0.0f;
+                break;
+                
+            case 2: // Emboss
+                params.kernelSize = 3;
+                params.kernel[0] = -2.0f; params.kernel[1] = -1.0f; params.kernel[2] = 0.0f;
+                params.kernel[3] = -1.0f; params.kernel[4] = 1.0f; params.kernel[5] = 1.0f;
+                params.kernel[6] = 0.0f; params.kernel[7] = 1.0f; params.kernel[8] = 2.0f;
+                params.kernelScale = 1.0f;
+                params.kernelOffset = 128.0f;
+                break;
+                
+            case 3: // Edge Enhance
+                params.kernelSize = 3;
+                params.kernel[0] = 0.0f; params.kernel[1] = -1.0f; params.kernel[2] = 0.0f;
+                params.kernel[3] = -1.0f; params.kernel[4] = 4.0f; params.kernel[5] = -1.0f;
+                params.kernel[6] = 0.0f; params.kernel[7] = -1.0f; params.kernel[8] = 0.0f;
+                break;
+        }
+    }
+
+    void applyConvolution() {
+        if (!workingImage.data) return;
+        
+        Mat result;
+        int kSize = params.kernelSize;
+        Mat kernelMat = Mat(kSize, kSize, CV_32F);
+        
+        // Copy kernel values to Mat
+        for (int i = 0; i < kSize; i++) {
+            for (int j = 0; j < kSize; j++) {
+                kernelMat.at<float>(i, j) = params.kernel[i * kSize + j] * params.kernelScale;
+            }
+        }
+        
+        // Apply convolution
+        Mat temp;
+        if (workingImage.channels() == 1) {
+            filter2D(workingImage, temp, -1, kernelMat, Point(-1, -1), params.kernelOffset);
+        } else {
+            vector<Mat> channels;
+            split(workingImage, channels);
+            
+            vector<Mat> results;
+            for (auto& channel : channels) {
+                Mat channelResult;
+                filter2D(channel, channelResult, -1, kernelMat, Point(-1, -1), params.kernelOffset);
+                results.push_back(channelResult);
+            }
+            
+            merge(results, temp);
+        }
+        
+        // Add to history and update
+        addToHistory(workingImage);
+        temp.copyTo(workingImage);
+        updateTexture();
+    }
 
 public:
     ImageEditorGUI(const string& path = "") {
         imagePath = path;
+        
+        // Initialize default kernels
+        initializeDefaultKernels();
         
         // If path is provided, load the image
         if (!path.empty()) {
@@ -1376,6 +1472,7 @@ public:
                 {"Edge Detection", [this]() { activeOperation = EDGE_DETECTION; }},
                 {"Blend", [this]() { activeOperation = BLEND; }},
                 {"Noise", [this]() { activeOperation = NOISE; }},
+                {"Convolution", [this]() { activeOperation = CONVOLUTION; }},
                 {"Crop Image", [this]() { enterCropMode(); }},
                 {"Split Channels", [this]() { splitImageChannels(); showChannelSplitter = true; }}
             };
@@ -1430,10 +1527,13 @@ public:
             } else {
                 // Display properties based on active operation
                 
-                // Declare variables outside the switch statement to avoid "jump to case label" errors
+                // Declare variables outside the switch statement to avoid crossing initialization
                 const char* thresholdMethods[] = { "Binary", "Adaptive", "Otsu" };
                 const char* edgeMethods[] = { "Sobel", "Canny" };
                 const char* blendModes[] = { "Normal", "Multiply", "Screen", "Overlay", "Difference" };
+                const char* noiseTypes[] = { "Perlin", "Simplex", "Worley", "Value", "Fractal Brownian Motion" };
+                const char* kernelSizes[] = { "3x3", "5x5" };
+                const char* presets[] = { "Custom", "Sharpen", "Emboss", "Edge Enhance" };
                 
                 vector<vector<int>> histogram;
                 int maxCount = 0;
@@ -1441,6 +1541,8 @@ public:
                 ImVec2 canvas_pos;
                 ImVec2 canvas_size;
                 float bar_width;
+                int currentSize;
+                float cellWidth;
                 
                 // Calculate histogram if needed for threshold
                 if (activeOperation == THRESHOLD) {
@@ -1763,7 +1865,6 @@ public:
                         ImGui::Separator();
                         
                         // Noise type selection
-                        const char* noiseTypes[] = { "Perlin", "Simplex", "Worley", "Value", "Fractal Brownian Motion" };
                         ImGui::Combo("Noise Type", &params.noiseType, noiseTypes, IM_ARRAYSIZE(noiseTypes));
                         
                         ImGui::Spacing();
@@ -1797,6 +1898,65 @@ public:
                         // Apply button
                         if (ImGui::Button("Apply Noise", ImVec2(150, 30))) {
                             applyNoise();
+                        }
+                        break;
+
+                    case CONVOLUTION:
+                        ImGui::Text("Convolution Filter Properties");
+                        ImGui::Separator();
+                        
+                        // Kernel size selection
+                        currentSize = (params.kernelSize == 3) ? 0 : 1;
+                        if (ImGui::Combo("Kernel Size", &currentSize, kernelSizes, IM_ARRAYSIZE(kernelSizes))) {
+                            params.kernelSize = (currentSize == 0) ? 3 : 5;
+                            // Reset kernel when size changes
+                            std::fill(params.kernel, params.kernel + 25, 0.0f);
+                            params.kernel[params.kernelSize * params.kernelSize / 2] = 1.0f; // Center pixel
+                        }
+                        
+                        ImGui::Spacing();
+                        
+                        // Preset selection
+                        if (ImGui::Combo("Preset", &params.currentPreset, presets, IM_ARRAYSIZE(presets))) {
+                            applyPresetKernel();
+                        }
+                        
+                        ImGui::Spacing();
+                        
+                        // Kernel matrix editor
+                        if (ImGui::CollapsingHeader("Kernel Matrix", ImGuiTreeNodeFlags_DefaultOpen)) {
+                            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 2));
+                            
+                            cellWidth = ImGui::GetContentRegionAvail().x / (params.kernelSize + 1);
+                            for (int i = 0; i < params.kernelSize; i++) {
+                                for (int j = 0; j < params.kernelSize; j++) {
+                                    if (j > 0) ImGui::SameLine();
+                                    char label[32];
+                                    snprintf(label, sizeof(label), "##K%d%d", i, j);
+                                    ImGui::PushItemWidth(cellWidth);
+                                    ImGui::InputFloat(label, &params.kernel[i * params.kernelSize + j], 0.0f, 0.0f, "%.3f");
+                                    ImGui::PopItemWidth();
+                                }
+                            }
+                            
+                            ImGui::PopStyleVar();
+                        }
+                        
+                        ImGui::Spacing();
+                        
+                        // Scale and offset controls
+                        ImGui::SliderFloat("Scale", &params.kernelScale, 0.1f, 5.0f, "%.3f");
+                        ImGui::SliderFloat("Offset", &params.kernelOffset, -255.0f, 255.0f, "%.1f");
+                        
+                        ImGui::Spacing();
+                        
+                        // Apply button
+                        if (ImGui::Button("Apply Convolution", ImVec2(150, 30))) {
+                            applyConvolution();
+                        }
+                        ImGui::SameLine();
+                        if (ImGui::Button("Reset Kernel", ImVec2(150, 30))) {
+                            initializeDefaultKernels();
                         }
                         break;
                 }
