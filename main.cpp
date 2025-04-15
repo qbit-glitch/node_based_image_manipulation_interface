@@ -9,6 +9,7 @@
 #include "external/imgui/backends/imgui_impl_glfw.h"
 #include "external/imgui/backends/imgui_impl_opengl3.h"
 #include <algorithm> // Add this for std::clamp
+#include <sys/stat.h> // Add this for stat functionality
 
 // For file dialogs
 #ifdef _WIN32
@@ -203,8 +204,8 @@ private:
     int imageHeight = 0;
     
     // Window dimensions
-    int windowWidth = 1280;
-    int windowHeight = 720;
+    int windowWidth = 2400;
+    int windowHeight = 1800;
     
     // UI state
     bool showDemoWindow = false;
@@ -219,9 +220,9 @@ private:
     bool showRotationOptions = false;  // For rotation options window
     
     // Resizable pane heights
-    float imagePaneHeight = 400.0f;
-    float propertiesPaneHeight = 200.0f;
-    float imageInfoPaneHeight = 100.0f;
+    float imagePaneHeight = 600.0f;
+    float propertiesPaneHeight = 600.0f;
+    float imageInfoPaneHeight = 200.0f;
     
     // Crop mode state
     bool isDragging = false;
@@ -425,7 +426,7 @@ public:
         }
         
         currentHistoryIndex--;
-        workingImage = historyStack[currentHistoryIndex - 1].clone();
+        workingImage = historyStack[currentHistoryIndex].clone();
         updateTexture();
         return true;
     }
@@ -460,16 +461,6 @@ public:
     // Apply all current transformations to the image
     void applyTransformations(Mat& image) {
         if (image.empty()) return;  // Skip if image is empty
-        
-        // Apply resize if not 100%
-        // if (params.resizeRatio != 100.0f) {
-        //     double ratio = params.resizeRatio / 100.0;
-        //     int newWidth = static_cast<int>(originalImage.cols * ratio);
-        //     int newHeight = static_cast<int>(originalImage.rows * ratio);
-        //     if (newWidth > 0 && newHeight > 0) {  // Ensure valid dimensions
-        //         resize(image, image, Size(newWidth, newHeight), 0, 0, INTER_LINEAR);
-        //     }
-        // }
         
         // Apply rotation if not 0
         if (params.rotationAngle != 0.0f) {
@@ -554,7 +545,6 @@ public:
         params.contrast = 100.0f;
         params.blurSize = 0.0f;
         params.rotationAngle = 0.0f;
-        // params.resizeRatio = 100.0f;
         
         // Exit crop mode if active
         cropMode = false;
@@ -592,7 +582,7 @@ public:
         // Add current state to history before applying changes
         addToHistory(workingImage);
         
-        Mat sharpeningKernel = (Mat_<float>(3, 3) << -1, -1, -1, -1, 9, -1, -1, -1, -1);
+        Mat sharpeningKernel = (Mat_<float>(3, 3) << 0, -1, 0, -1, 5, -1, 0, -1, 0);
         filter2D(workingImage, workingImage, workingImage.depth(), sharpeningKernel);
         
         // Update the texture
@@ -2105,6 +2095,34 @@ public:
                 ImGui::Text("Dimensions: %d x %d", workingImage.cols, workingImage.rows);
                 ImGui::Text("Channels: %d", workingImage.channels());
                 ImGui::Text("Type: %s", workingImage.type() == CV_8UC3 ? "8-bit BGR" : "Other");
+                
+                // Get file size and format
+                if (!imagePath.empty()) {
+                    // Get file size
+                    struct stat st;
+                    if (stat(imagePath.c_str(), &st) == 0) {
+                        double fileSize = st.st_size;
+                        const char* sizeUnit = "B";
+                        if (fileSize >= 1024) {
+                            fileSize /= 1024;
+                            sizeUnit = "KB";
+                            if (fileSize >= 1024) {
+                                fileSize /= 1024;
+                                sizeUnit = "MB";
+                            }
+                        }
+                        ImGui::Text("File Size: %.2f %s", fileSize, sizeUnit);
+                    }
+                    
+                    // Get file format from extension
+                    size_t dotPos = imagePath.find_last_of(".");
+                    if (dotPos != string::npos) {
+                        string format = imagePath.substr(dotPos + 1);
+                        // Convert to uppercase
+                        transform(format.begin(), format.end(), format.begin(), ::toupper);
+                        ImGui::Text("Format: %s", format.c_str());
+                    }
+                }
             } else {
                 ImGui::Text("No image loaded");
             }
@@ -2280,12 +2298,8 @@ public:
 
 // Main function
 int main(int argc, char* argv[]) {
-    string imagePath = "/home/quant/testing_codes_github/node_based_image_manipulation_interface/assets/anime_girl.jpg";
-    
-    // Check if image path is provided as command-line argument
-    // if (argc > 1) {
-    //     imagePath = argv[1];
-    // }
+    string imagePath = "";
+
     
     // Create an instance of the editor
     ImageEditorGUI editor(imagePath);
